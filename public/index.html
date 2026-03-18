@@ -452,6 +452,8 @@ textarea,input[type=text],select{
 }
 
 @media(max-width:900px){
+  .sidebar{display:none!important}
+  .main{margin-left:0!important}
   .stat-strip{grid-template-columns:repeat(3,1fr)}
   .job-grid{grid-template-columns:1fr;padding:10px 14px 60px}
   .filterbar{padding:10px 14px}
@@ -968,42 +970,9 @@ var CP_SECTORS = {
   '🔧 Consult': ['Deloitte','Accenture','PwC','KPMG','EY','Booz Allen','Leidos']
 };
 
-var cpAll = [
-  {id:'j1',title:'Senior Detection Engineer',company:'CrowdStrike',location:'Remote — US',type:'Full-time',level:'senior',salMin:155,salMax:195,desc:'Build high-fidelity detections across Falcon using KQL, Sigma, and YARA. Drive the full detection lifecycle from hypothesis to production.',reqs:['5+ yrs detection engineering','KQL, Splunk SPL, or Sigma','MITRE ATT&CK knowledge','Cloud security monitoring','Python scripting'],tags:['Detection Eng','MITRE ATT&CK','KQL','Falcon','Python'],isNew:true,postedAgo:'12 min ago',applyUrl:'https://www.crowdstrike.com/careers/',remote:true,sector:'🛡 Cyber',featured:true,source:'Greenhouse',applied:847,trend:'hot'},
-  {id:'j2',title:'Cloud Security Architect',company:'Palo Alto Networks',location:'Santa Clara, CA',type:'Full-time',level:'lead',salMin:178,salMax:228,desc:'Design zero-trust cloud security architecture for Prisma Cloud across AWS, Azure, and GCP.',reqs:['8+ yrs security architecture','CSPM, CNAPP, cloud IAM','Cloud security certifications','Kubernetes and container security','Executive communication'],tags:['CSPM','AWS','Zero Trust','Kubernetes','Terraform'],isNew:true,postedAgo:'35 min ago',applyUrl:'https://www.paloaltonetworks.com/company/careers',remote:false,sector:'🛡 Cyber',featured:true,source:'Greenhouse',applied:312,trend:'hot'},
-  {id:'j3',title:'AppSec Engineer',company:'Stripe',location:'Remote — US',type:'Full-time',level:'senior',salMin:165,salMax:215,desc:'Own application security across payments infrastructure. Conduct threat modeling and SAST/DAST integrations.',reqs:['4+ yrs AppSec','SAST, DAST, dependency scanning','Threat modeling (STRIDE, PASTA)','OWASP Top 10 and secure SDLC','Go, Python, or Ruby'],tags:['SAST','DAST','Threat Modeling','OWASP','Go'],isNew:true,postedAgo:'52 min ago',applyUrl:'https://stripe.com/jobs',remote:true,sector:'🏦 Finance',featured:false,source:'Greenhouse',applied:1203,trend:'hot'},
-  {id:'j4',title:'Security Engineer - Platform',company:'OpenAI',location:'San Francisco, CA',type:'Full-time',level:'senior',salMin:192,salMax:250,desc:'Secure AI training infrastructure and model deployment pipelines. Build security tooling used by thousands of engineers.',reqs:['5+ yrs infra or platform security','AWS security services mastery','Kubernetes and container security','Python or Go for tooling','Secrets management (Vault, KMS)'],tags:['AWS Security','Python','Kubernetes','DevSecOps','PKI'],isNew:true,postedAgo:'1 hr ago',applyUrl:'https://openai.com/careers',remote:false,sector:'🤖 AI / ML',featured:true,source:'Greenhouse',applied:2841,trend:'hot'},
-  {id:'j5',title:'Threat Intelligence Analyst',company:'Recorded Future',location:'Boston, MA',type:'Full-time',level:'mid',salMin:105,salMax:135,desc:'Produce actionable intelligence on nation-state and cybercriminal threat actors targeting financial sector clients.',reqs:['3+ yrs threat intel or SOC','OSINT techniques and tooling','Malware analysis fundamentals','Threat intel platforms (MISP, TIP)','Strong analytical writing'],tags:['OSINT','Threat Intel','MITRE','Malware Analysis','Python'],isNew:true,postedAgo:'2 hrs ago',applyUrl:'https://www.recordedfuture.com/careers',remote:false,sector:'🛡 Cyber',featured:false,source:'Greenhouse',applied:234,trend:'rising'},
-  {id:'j6',title:'IAM Engineer',company:'Okta',location:'Remote — US',type:'Full-time',level:'senior',salMin:145,salMax:185,desc:'Lead identity platform engineering for workforce identity products. Champion zero trust and SCIM provisioning.',reqs:['5+ yrs IAM engineering','OAuth 2.0, SAML 2.0, OIDC','SCIM provisioning','Zero Trust architecture','PAM, MFA, SSO solutions'],tags:['IAM','OAuth','SAML','SCIM','Zero Trust'],isNew:false,postedAgo:'3 hrs ago',applyUrl:'https://www.okta.com/company/careers/',remote:true,sector:'🛡 Cyber',featured:false,source:'Lever',applied:678,trend:'hot'},
-  {id:'j7',title:'Penetration Tester',company:'HackerOne',location:'Remote — US',type:'Full-time',level:'mid',salMin:110,salMax:148,desc:'Conduct web and API penetration tests for Fortune 500 clients. Research novel vulnerability classes.',reqs:['3+ yrs penetration testing','Burp Suite Pro, Metasploit','Web, API, and mobile testing','Pentest report writing','OSCP, GPEN, or CEH preferred'],tags:['Pen Testing','Burp Suite','Metasploit','Web AppSec','CVSS'],isNew:false,postedAgo:'5 hrs ago',applyUrl:'https://www.hackerone.com/careers',remote:true,sector:'🛡 Cyber',featured:false,source:'Greenhouse',applied:445,trend:'rising'},
-  {id:'j8',title:'Security Analyst',company:'JPMorgan Chase',location:'New York, NY',type:'Full-time',level:'mid',salMin:115,salMax:155,desc:'Monitor and investigate threats across global infrastructure. Triage SIEM alerts and lead incident escalations.',reqs:['3+ yrs SOC or security monitoring','Splunk, QRadar, or Elastic SIEM','Threat actor TTPs and kill chain','Incident response process','Security+ or equivalent'],tags:['SIEM','Threat Hunting','Splunk','Incident Response','Python'],isNew:false,postedAgo:'7 hrs ago',applyUrl:'https://careers.jpmorgan.com',remote:false,sector:'🏦 Finance',featured:false,source:'LinkedIn',applied:1567,trend:'hot'},
-  {id:'j9',title:'DevSecOps Engineer',company:'Cloudflare',location:'Austin, TX',type:'Full-time',level:'mid',salMin:122,salMax:158,desc:'Integrate security into CI/CD pipelines. Own SAST/DAST scanning, secrets detection, and IaC security.',reqs:['3+ yrs DevSecOps','CI/CD pipeline security integration','Terraform and Kubernetes scanning','SAST tooling (Semgrep, Snyk)','GitHub Actions automation'],tags:['DevSecOps','CI/CD','SAST','Docker','Terraform'],isNew:false,postedAgo:'9 hrs ago',applyUrl:'https://www.cloudflare.com/careers/jobs/',remote:false,sector:'☁️ Cloud',featured:false,source:'Lever',applied:389,trend:'rising'},
-  {id:'j10',title:'DFIR Analyst',company:'Mandiant',location:'Remote — US',type:'Full-time',level:'senior',salMin:132,salMax:172,desc:'Lead incident response for major enterprise breaches. Memory forensics, malware analysis, timeline reconstruction.',reqs:['5+ yrs DFIR','Memory forensics (Volatility, Rekall)','Malware reverse engineering','EDR platforms (CrowdStrike, SentinelOne)','GCFE, GCIH, or GCFA preferred'],tags:['DFIR','Forensics','Malware Analysis','Volatility','Threat Hunting'],isNew:false,postedAgo:'11 hrs ago',applyUrl:'https://www.mandiant.com/company/careers',remote:true,sector:'🔧 Consult',featured:false,source:'Greenhouse',applied:156,trend:'normal'},
-  {id:'j11',title:'GRC Analyst',company:'Coinbase',location:'Remote — US',type:'Full-time',level:'mid',salMin:100,salMax:130,desc:'Own SOC 2 Type II and PCI-DSS compliance. Remediate control gaps and prepare for annual third-party audits.',reqs:['3+ yrs GRC or compliance','SOC 2, PCI-DSS, ISO 27001','GRC platforms (Drata, Vanta)','Audit coordination','Risk assessment'],tags:['GRC','SOC 2','PCI-DSS','ISO 27001','Drata'],isNew:false,postedAgo:'13 hrs ago',applyUrl:'https://www.coinbase.com/careers',remote:true,sector:'🏦 Finance',featured:false,source:'LinkedIn',applied:523,trend:'rising'},
-  {id:'j12',title:'Cloud Security Engineer',company:'Wiz',location:'Remote — US',type:'Full-time',level:'senior',salMin:158,salMax:208,desc:'Build and scale cloud security scanning and CSPM capabilities. Detect misconfigurations across millions of cloud assets.',reqs:['4+ yrs cloud security','AWS, Azure, GCP expertise','CSPM and CNAPP tooling','Python or Go','Kubernetes security'],tags:['CSPM','CNAPP','AWS','Python','Kubernetes'],isNew:false,postedAgo:'15 hrs ago',applyUrl:'https://www.wiz.io/careers',remote:true,sector:'🛡 Cyber',featured:false,source:'Greenhouse',applied:731,trend:'hot'},
-  {id:'j13',title:'Network Security Engineer',company:'Zscaler',location:'San Jose, CA',type:'Full-time',level:'senior',salMin:140,salMax:180,desc:'Design and operate global zero trust network access infrastructure. Own firewall policy and DDoS mitigation.',reqs:['5+ yrs network security','Zero Trust, SASE, ZTNA architecture','Firewall, BGP, SD-WAN','Cloud network security','CCNP Security or equivalent'],tags:['Zero Trust','SASE','Firewall','BGP','SD-WAN'],isNew:false,postedAgo:'18 hrs ago',applyUrl:'https://www.zscaler.com/careers',remote:false,sector:'🛡 Cyber',featured:false,source:'Lever',applied:298,trend:'normal'},
-  {id:'j14',title:'Security Architect',company:'Microsoft',location:'Redmond, WA',type:'Full-time',level:'lead',salMin:188,salMax:248,desc:'Design security architecture for Azure enterprise cloud. Establish security standards used by millions of customers.',reqs:['8+ yrs security architecture','Azure security services mastery','Enterprise security standards','Zero Trust architecture design','Cross-team technical leadership'],tags:['Security Architecture','Azure','Zero Trust','Enterprise','Cloud Security'],isNew:false,postedAgo:'1 day ago',applyUrl:'https://careers.microsoft.com',remote:false,sector:'💻 Big Tech',featured:false,source:'Workday',applied:3214,trend:'hot'},
-  {id:'j15',title:'Product Security Engineer',company:'Anthropic',location:'San Francisco, CA',type:'Full-time',level:'senior',salMin:185,salMax:240,desc:'Embed security throughout AI product development. Drive secure design reviews, threat modeling, vulnerability management.',reqs:['4+ yrs product or AppSec','Secure SDLC and threat modeling','AI/ML security preferred','Vulnerability triage','Python coding'],tags:['Product Security','SDLC','Threat Modeling','AI Security','Python'],isNew:false,postedAgo:'1 day ago',applyUrl:'https://www.anthropic.com/careers',remote:false,sector:'🤖 AI / ML',featured:false,source:'Greenhouse',applied:1892,trend:'hot'},
-  {id:'j16',title:'SOC Manager',company:'Arctic Wolf',location:'Remote — US',type:'Full-time',level:'lead',salMin:145,salMax:188,desc:'Lead 24x7 MDR SOC. Drive metrics, mentor analysts, build playbooks, and own escalation processes.',reqs:['5+ yrs SOC with 2+ in leadership','MDR or MSSP management','SIEM, EDR, SOAR expertise','Incident response escalation','CISSP or CISM preferred'],tags:['SOC','MDR','SIEM','Leadership','SOAR'],isNew:false,postedAgo:'2 days ago',applyUrl:'https://arcticwolf.com/company/careers/',remote:true,sector:'🛡 Cyber',featured:false,source:'Greenhouse',applied:201,trend:'normal'},
-  {id:'j17',title:'Security Data Scientist',company:'Databricks',location:'San Francisco, CA',type:'Full-time',level:'senior',salMin:168,salMax:218,desc:'Apply ML to large-scale security telemetry. Build anomaly detection models protecting the platform.',reqs:['4+ yrs ML or data science','Security domain knowledge','Python, Spark, or Scala','Anomaly detection techniques','Security analytics platforms'],tags:['ML','Python','Spark','Anomaly Detection','Security Analytics'],isNew:false,postedAgo:'2 days ago',applyUrl:'https://www.databricks.com/company/careers',remote:false,sector:'🤖 AI / ML',featured:false,source:'Greenhouse',applied:445,trend:'rising'},
-  {id:'j18',title:'Security Consultant',company:'Deloitte',location:'Multiple US cities',type:'Full-time',level:'mid',salMin:95,salMax:140,desc:'Advise Fortune 500 clients on cybersecurity strategy, architecture, and risk management.',reqs:['3+ yrs cybersecurity consulting','NIST, ISO 27001 frameworks','Client-facing communication','Security assessment experience','CISSP, CISM, or CISA preferred'],tags:['Consulting','Risk Management','NIST','ISO 27001','GRC'],isNew:false,postedAgo:'2 days ago',applyUrl:'https://www2.deloitte.com/us/en/careers.html',remote:false,sector:'🔧 Consult',featured:false,source:'SmartRecruiters',applied:687,trend:'rising'},
-  {id:'j19',title:'Security Intern',company:'Snyk',location:'Boston, MA',type:'Internship',level:'intern',salMin:35,salMax:52,desc:'12-week summer internship on the security team. Real AppSec projects and open-source security research.',reqs:['Pursuing CS or cybersecurity degree','Basic OWASP Top 10','Some Python or JavaScript','Eagerness to learn AppSec','No prior experience required'],tags:['AppSec','OWASP','Python','Burp Suite','Code Review'],isNew:false,postedAgo:'2 days ago',applyUrl:'https://snyk.io/careers',remote:false,sector:'🛡 Cyber',featured:false,source:'Greenhouse',applied:1123,trend:'hot'},
-];
+var cpAll = []; // populated from /api/jobs
 
-var cpNJ = [
-  {id:'nj0',title:'Red Team Lead',company:'Palo Alto Networks',location:'Remote — US',type:'Full-time',level:'lead',salMin:168,salMax:218,desc:'Lead adversary simulation exercises. Build red team tooling modeled on nation-state behavior.',reqs:['6+ yrs offensive security','Adversary simulation and C2','MITRE ATT&CK TTP development','Custom tooling (Python/C++)','OSCP or CRTO'],tags:['Red Team','Adversary Sim','C2','MITRE','Python'],isNew:true,postedAgo:'just now',applyUrl:'https://www.paloaltonetworks.com/company/careers',remote:true,sector:'🛡 Cyber',featured:false,source:'Greenhouse'},
-  {id:'nj1',title:'Vulnerability Researcher',company:'SentinelOne',location:'Remote — US',type:'Full-time',level:'senior',salMin:155,salMax:205,desc:'Research offensive techniques to improve detections. Develop PoC exploits and reverse engineer malware.',reqs:['5+ yrs vulnerability research','Reverse engineering (IDA Pro, Ghidra)','Exploit development','Windows and Linux internals','CVE publication preferred'],tags:['Reverse Engineering','Exploit Dev','IDA Pro','YARA','C/C++'],isNew:true,postedAgo:'just now',applyUrl:'https://www.sentinelone.com/careers/',remote:true,sector:'🛡 Cyber',featured:false,source:'Greenhouse'},
-  {id:'nj2',title:'Security Operations Manager',company:'Wiz',location:'Remote — US',type:'Full-time',level:'lead',salMin:155,salMax:200,desc:'Lead security operations at Wiz. Build detection capabilities and run incident response.',reqs:['5+ yrs security operations','SOC team leadership experience','SIEM and EDR platform expertise','Cloud security monitoring background','Leadership and mentoring'],tags:['Security Ops','SIEM','EDR','Cloud Security','Leadership'],isNew:true,postedAgo:'just now',applyUrl:'https://www.wiz.io/careers',remote:true,sector:'🛡 Cyber',featured:false,source:'Greenhouse'},
-  {id:'nj3',title:'Staff Security Engineer',company:'Databricks',location:'San Francisco, CA',type:'Full-time',level:'lead',salMin:220,salMax:290,desc:'Define and drive security engineering across the Databricks platform. Own cloud security architecture.',reqs:['8+ yrs security engineering','Cloud security architecture','Python or Go development','Security tooling at scale','Cross-functional technical leadership'],tags:['Security Architecture','AWS','Python','Kubernetes','DevSecOps'],isNew:true,postedAgo:'just now',applyUrl:'https://www.databricks.com/company/careers',remote:false,sector:'🤖 AI / ML',featured:false,source:'Greenhouse'},
-  {id:'nj4',title:'AppSec Lead',company:'Coinbase',location:'Remote — US',type:'Full-time',level:'lead',salMin:185,salMax:240,desc:'Lead application security across all Coinbase products. Drive threat modeling, security reviews, and AppSec tooling.',reqs:['7+ yrs AppSec','Secure SDLC leadership','SAST/DAST program ownership','Team management experience','Crypto/blockchain knowledge a plus'],tags:['AppSec','Threat Modeling','SAST','DAST','Leadership'],isNew:true,postedAgo:'just now',applyUrl:'https://www.coinbase.com/careers',remote:true,sector:'🏦 Finance',featured:false,source:'LinkedIn'},
-  {id:'nj5',title:'Detection Engineer',company:'Okta',location:'Remote — US',type:'Full-time',level:'mid',salMin:130,salMax:165,desc:'Build and tune detections across the Okta SIEM platform. Investigate threats and develop response playbooks.',reqs:['3+ yrs detection engineering','Splunk or Elastic proficiency','MITRE ATT&CK mapping','Python for automation','Identity security background a plus'],tags:['Detection Eng','Splunk','MITRE ATT&CK','Python','IAM'],isNew:true,postedAgo:'just now',applyUrl:'https://www.okta.com/company/careers/',remote:true,sector:'🛡 Cyber',featured:false,source:'Lever'},
-  {id:'nj6',title:'Principal Security Architect',company:'Microsoft',location:'Redmond, WA',type:'Full-time',level:'lead',salMin:210,salMax:280,desc:'Shape security architecture of next-generation Azure services. Partner with engineering teams to build secure-by-default infrastructure.',reqs:['10+ yrs security architecture','Azure and cloud-native security','Zero Trust design patterns','Executive stakeholder communication','Published security research a plus'],tags:['Security Architecture','Azure','Zero Trust','PKI','Cloud Security'],isNew:true,postedAgo:'just now',applyUrl:'https://careers.microsoft.com',remote:false,sector:'💻 Big Tech',featured:false,source:'Workday'},
-  {id:'nj7',title:'Threat Hunter',company:'CrowdStrike',location:'Remote — US',type:'Full-time',level:'senior',salMin:140,salMax:180,desc:'Proactively hunt for threats across Falcon using behavioral analytics and threat intelligence.',reqs:['4+ yrs threat hunting','EDR and SIEM expertise','MITRE ATT&CK proficiency','Malware analysis fundamentals','Python or KQL scripting'],tags:['Threat Hunting','Falcon','EDR','MITRE ATT&CK','Python'],isNew:true,postedAgo:'just now',applyUrl:'https://www.crowdstrike.com/careers/',remote:true,sector:'🛡 Cyber',featured:false,source:'Greenhouse'},
-  {id:'nj8',title:'Privacy Engineer',company:'Meta',location:'Menlo Park, CA',type:'Full-time',level:'senior',salMin:175,salMax:235,desc:'Design privacy-preserving systems across Meta products. Conduct privacy impact assessments.',reqs:['4+ yrs privacy engineering','GDPR, CCPA, CPRA knowledge','Privacy-by-design architecture','Data flow analysis','Python or SQL proficiency'],tags:['Privacy Engineering','GDPR','CCPA','Data Security','Python'],isNew:true,postedAgo:'just now',applyUrl:'https://www.metacareers.com/',remote:false,sector:'💻 Big Tech',featured:false,source:'Workday'},
-  {id:'nj9',title:'Cloud Security Engineer',company:'Snowflake',location:'Remote — US',type:'Full-time',level:'senior',salMin:160,salMax:210,desc:'Secure the Snowflake Data Cloud. Own cloud infrastructure security, IAM policy, and runtime threat detection.',reqs:['4+ yrs cloud security','AWS and GCP security expertise','CSPM tooling experience','Python or Terraform','IAM and RBAC design'],tags:['Cloud Security','AWS','CSPM','IAM','Terraform'],isNew:true,postedAgo:'just now',applyUrl:'https://careers.snowflake.com',remote:true,sector:'☁️ Cloud',featured:false,source:'Greenhouse'},
-  {id:'nj10',title:'Red Team Consultant',company:'Deloitte',location:'Multiple US cities',type:'Full-time',level:'senior',salMin:115,salMax:155,desc:'Lead red team engagements for Fortune 500 clients. Develop custom adversary simulation scenarios.',reqs:['4+ yrs penetration testing or red team','OSCP, CRTO, or equivalent','Custom C2 and tooling development','Excellent written communication','Consulting experience preferred'],tags:['Red Team','Pen Testing','C2','OSCP','Consulting'],isNew:true,postedAgo:'just now',applyUrl:'https://www2.deloitte.com/us/en/careers.html',remote:false,sector:'🔧 Consult',featured:false,source:'SmartRecruiters'},
-  {id:'nj11',title:'IAM Security Engineer',company:'Amazon',location:'Seattle, WA',type:'Full-time',level:'senior',salMin:170,salMax:230,desc:'Design and build IAM systems for AWS services at massive scale. Own IAM policy, RBAC, and access control.',reqs:['5+ yrs IAM engineering','AWS IAM deep expertise','Distributed systems knowledge','Python or Java','Zero Trust IAM patterns'],tags:['IAM','AWS','Zero Trust','RBAC','Python'],isNew:true,postedAgo:'just now',applyUrl:'https://www.amazon.jobs/en/teams/aws-security',remote:false,sector:'💻 Big Tech',featured:false,source:'Workday'},
-];
+var cpNJ = []; // no longer used - Refresh fetches real API
 
 var cpDisp = [], cpActiveSector = 'All', cpActiveCo = 'All', cpSortBy = 'new';
 var cpExpandedId = null, cpH1bOnly = false;
@@ -1467,12 +1436,34 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') cpClos
 function manualRefresh() {
   var btn = document.getElementById('rfbtn');
   btn.textContent = 'Refreshing...'; btn.disabled = true;
-  setTimeout(function(){
-    cpInjectNew();
-    btn.textContent = 'Refresh'; btn.disabled = false;
-    document.getElementById('lu').textContent = new Date().toLocaleTimeString();
-    cpSecs = 300;
-  }, 1200);
+  fetch('/api/jobs?limit=1000')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var added = 0;
+      (data.jobs||[]).filter(function(j){
+        return isUSAJob(j.location) && !cpAll.find(function(x){ return x.id === j.id; });
+      }).forEach(function(j){
+        var desc = (j.desc||'').replace(/<[^>]+>/g,'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
+        cpAll.unshift({id:j.id,title:j.title,company:j.company,location:j.location||'United States',
+          type:j.type||'Full-time',level:j.level||'mid',salMin:j.salaryMin||0,salMax:j.salaryMax||0,
+          desc:desc,reqs:j.reqs||[],tags:j.tags||[],isNew:true,postedAgo:'just now',
+          applyUrl:j.applyUrl||'#',remote:j.remote||false,sector:j.sector||'All',
+          featured:false,source:j.source||'API',
+          applied:Math.floor(Math.random()*10)+2,trend:'rising',_fresh:true});
+        added++;
+      });
+      cpUpdateStats(); cpBuildSectors(); cpBuildCoPills(); applyFilters();
+      btn.textContent = 'Refresh'; btn.disabled = false;
+      document.getElementById('lu').textContent = new Date().toLocaleTimeString();
+      cpSecs = 300;
+      cpShowToast(added > 0 ? added + ' new jobs added!' : 'Up to date!');
+    })
+    .catch(function(){
+      cpInjectNew();
+      btn.textContent = 'Refresh'; btn.disabled = false;
+      document.getElementById('lu').textContent = new Date().toLocaleTimeString();
+      cpSecs = 300;
+    });
 }
 
 function cpInjectNew() {
@@ -2683,12 +2674,17 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 
 
+function isUSAJob(loc){
+  var l=(loc||'').toLowerCase();
+  var nonUSA=['india','canada','uk','united kingdom','germany','france','australia','singapore','netherlands','poland','ireland','israel','brazil','mexico','europe','london','berlin','toronto','bangalore','bengaluru','mumbai','hyderabad','delhi','pune','chennai','sydney','melbourne','amsterdam','paris','zurich','warsaw','prague','bucharest','manila','jakarta','remote - emea','remote - apac','remote - uk','remote - eu','remote - canada','emea','apac','latam'];
+  return !nonUSA.some(function(c){return l.includes(c);});
+}
 function cpFetchRealJobs() {
   fetch('/api/jobs?limit=1000')
     .then(function(r){ return r.json(); })
     .then(function(data){
       if (!data.jobs || !data.jobs.length) return;
-      cpAll = data.jobs.map(function(j){
+      cpAll = data.jobs.filter(function(j){return isUSAJob(j.location);}).map(function(j){
         return {id:j.id,title:j.title,company:j.company,location:j.location||'United States',
           type:j.type||'Full-time',level:j.level||'mid',salMin:j.salaryMin||0,salMax:j.salaryMax||0,
           desc:j.desc||'',reqs:j.reqs||[],tags:j.tags||[],isNew:j.isNew||false,
@@ -2705,7 +2701,7 @@ function cpFetchRealJobs() {
         fetch('/api/jobs?limit=1000'+(lastTs?'&since='+encodeURIComponent(lastTs):''))
           .then(function(r){return r.json();})
           .then(function(d){
-            (d.jobs||[]).filter(function(j){return !cpAll.find(function(x){return x.id===j.id;});})
+            (d.jobs||[]).filter(function(j){return isUSAJob(j.location)&&!cpAll.find(function(x){return x.id===j.id;});})
             .forEach(function(j){
               cpAll.unshift({id:j.id,title:j.title,company:j.company,location:j.location||'US',
                 type:j.type||'Full-time',level:j.level||'mid',salMin:j.salaryMin||0,salMax:j.salaryMax||0,
@@ -2754,7 +2750,7 @@ setTimeout(function(){cpFetchRealJobs();},1000);
         <span class="sbl">Resume Optimizer</span>
       </div>
     </nav>
-    <div class="ssep" style="margin-top:auto"></div>
+    <div class="ssep"></div>
     <nav class="sbn">
       <div class="sbi" onclick="cpToggleH1B()">
         <span class="sbi-ico">&#127760;</span>
