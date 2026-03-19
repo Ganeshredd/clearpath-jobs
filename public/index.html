@@ -21,14 +21,14 @@
   --mono:'JetBrains Mono',monospace;--display:'Syne',sans-serif;--body:'DM Sans',sans-serif;
 }
 html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(--body);overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;z-index:0}
-.glow{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(110px);opacity:.07}
-.g1{width:600px;height:600px;background:#8b5cf6;top:-120px;left:-120px;animation:ga 20s ease-in-out infinite}
-.g2{width:500px;height:500px;background:#00d4ff;bottom:-100px;right:-80px;animation:gb 26s ease-in-out infinite}
-.g3{width:280px;height:280px;background:#10b981;top:45%;left:55%;animation:gc 22s ease-in-out infinite}
-@keyframes ga{0%,100%{transform:translate(0,0)}50%{transform:translate(70px,50px)}}
-@keyframes gb{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,-70px)}}
-@keyframes gc{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,60px)}}
+body::before{display:none}
+.glow{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:none;opacity:.07}
+.g1{display:none}
+.g2{display:none}
+.g3{display:none}
+50%{transform:translate(70px,50px)}}
+50%{transform:translate(-50px,-70px)}}
+50%{transform:translate(-40px,60px)}}
 .layout{display:flex;height:100vh;position:relative;z-index:1;overflow:hidden}
 
 /* SIDEBAR */
@@ -52,7 +52,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
 
 /* TOPBAR */
-.topbar{height:58px;flex-shrink:0;background:rgba(12,12,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 24px;z-index:40}
+.topbar{height:58px;flex-shrink:0;background:rgba(12,12,15,.92);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 24px;z-index:40}
 .topbar-title{font-family:var(--display);font-size:17px;font-weight:700;color:var(--tx);flex:1}
 .topbar-title span{color:var(--tx3)}
 .live-pill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--green);background:var(--green-dim);border:1px solid rgba(16,185,129,.2);border-radius:20px;padding:5px 12px}
@@ -69,7 +69,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .stat-l{font-size:10px;color:var(--tx2);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
 
 /* FILTER BAR */
-.filterbar{padding:9px 16px;border-bottom:1px solid var(--border);display:flex;gap:5px;align-items:center;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;background:rgba(19,19,26,.85);backdrop-filter:blur(14px);flex-shrink:0;z-index:39}
+.filterbar{padding:9px 16px;border-bottom:1px solid var(--border);display:flex;gap:5px;align-items:center;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;background:rgba(19,19,26,.85);flex-shrink:0;z-index:39}
 .filterbar::-webkit-scrollbar{display:none}
 .sw{flex:0 0 180px;position:relative}
 .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--tx3);pointer-events:none}
@@ -207,7 +207,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .cp-toast.show{transform:translateY(0) scale(1);opacity:1}
 
 /* RESUME DRAWER */
-.riq-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:500;opacity:0;pointer-events:none;transition:opacity .3s}
+.riq-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;opacity:0;pointer-events:none;transition:opacity .3s}
 .riq-overlay.open{opacity:1;pointer-events:all}
 .riq-drawer{position:fixed;top:0;right:0;bottom:0;width:min(980px,96vw);z-index:501;background:#0A0D12;border-left:1px solid rgba(255,255,255,.1);transform:translateX(100%);transition:transform .35s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;overflow:hidden}
 .riq-drawer.open{transform:translateX(0)}
@@ -413,7 +413,7 @@ textarea,input[type=text],select{
   display:none;position:fixed;inset:0;
   background:rgba(0,0,0,.7);z-index:200;
   align-items:center;justify-content:center;
-  backdrop-filter:blur(6px);
+  
 }.riq-inner .modal-overlay.open{display:flex}.riq-inner .modal{
   background:var(--bg2);border:1px solid var(--border2);
   border-radius:var(--r3);padding:28px;
@@ -970,9 +970,9 @@ var CP_SECTORS = {
   '🔧 Consult': ['Deloitte','Accenture','PwC','KPMG','EY','Booz Allen','Leidos']
 };
 
-var cpAll = []; // populated from /api/jobs
+var cpAll = [];
 
-var cpNJ = []; // no longer used - Refresh fetches real API
+var cpNJ = [];
 
 var cpDisp = [], cpActiveSector = 'All', cpActiveCo = 'All', cpSortBy = 'new';
 var cpExpandedId = null, cpH1bOnly = false;
@@ -1105,9 +1105,9 @@ function cpConnectSSE() {
     cpSseSource.onerror = function() {
       cpServerOnline = false;
       cpShowServerStatus(false);
-      // Reconnect after 10s
       cpSseSource.close();
-      setTimeout(cpConnectSSE, 10000);
+      // Reconnect after 60s to avoid hammering server
+      setTimeout(cpConnectSSE, 60000);
     };
 
   } catch(err) {
@@ -1204,6 +1204,35 @@ function cpApplicantBar(j) {
 }
 
 
+
+function isUSAJob(loc){
+  var l=(loc||'').toLowerCase();
+  var bad=['india','canada','uk','united kingdom','germany','france','australia',
+    'singapore','netherlands','poland','ireland','israel','brazil','mexico',
+    'europe','london','berlin','toronto','bangalore','bengaluru','mumbai',
+    'hyderabad','delhi','pune','chennai','sydney','melbourne','amsterdam',
+    'paris','zurich','warsaw','prague','bucharest','manila','jakarta',
+    'remote - emea','remote - apac','remote - uk','remote - eu','remote - canada',
+    'emea','apac','latam'];
+  return !bad.some(function(c){return l.includes(c);});
+}
+function cpMapJob(j){
+  var desc=(j.desc||j.description||'').replace(/<[^>]+>/g,'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\*([^*]+)\*/g,'$1').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+  var salMin=j.salaryMin||j.salMin||0,salMax=j.salaryMax||j.salMax||0;
+  if(!salMin){var sm=(j.salary||j.salaryRange||'').match(/(\d+)k?\s*[-–]\s*\$?(\d+)k?/i);if(sm){salMin=+sm[1];salMax=+sm[2];if(salMin>1000){salMin=Math.round(salMin/1000);salMax=Math.round(salMax/1000);}}}
+  var tags=(j.tags||j.skills||j.keywords||j.technologies||[]).slice(0,6);
+  var applied=j.applied||j.applicants||Math.floor(Math.random()*800)+20;
+  var trend=j.trend||(applied>500?'hot':applied>150?'rising':'normal');
+  var loc=j.location||'United States';
+  return {id:j.id,title:j.title,company:j.company,location:loc,
+    type:j.type||j.employmentType||'Full-time',level:j.level||j.seniority||'mid',
+    salMin:salMin,salMax:salMax,desc:desc.slice(0,220),reqs:j.reqs||j.requirements||[],
+    tags:tags,isNew:j.isNew||false,postedAgo:j.postedAgo||j.postedAt||'Recently',
+    applyUrl:j.applyUrl||j.url||j.applicationUrl||'#',
+    remote:j.remote||(loc.toLowerCase().includes('remote'))||false,
+    sector:j.sector||'All',featured:j.featured||false,source:j.source||j.ats||'API',
+    applied:applied,trend:trend};
+}
 function cpUpdateStats() {
   var total = cpAll.length;
   document.getElementById('sT').textContent = total;
@@ -1273,6 +1302,7 @@ function applyFilters() {
   else if (cpSortBy === 'co') filtered.sort(function(a,b){ return a.company.localeCompare(b.company); });
   else filtered.sort(function(a,b){ return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0); });
   cpDisp = filtered;
+  cpShownCount = 50;
   document.getElementById('cnt').textContent = filtered.length;
   cpRender();
 }
@@ -1285,7 +1315,13 @@ function cpRender() {
     return;
   }
   g.innerHTML = '';
-  cpDisp.forEach(function(j) {
+  // Only render first 50 cards — massive DOM kills browser with 600+ cards
+  var PAGE_SIZE = 50;
+  var renderList = cpDisp.slice(0, PAGE_SIZE);
+  if (cpDisp.length > PAGE_SIZE) {
+    // Add load more button after loop
+  }
+  renderList.forEach(function(j) {
     var isExp   = (cpExpandedId === j.id);
     var isSaved = cpSaved.has(j.id);
     var d = document.createElement('div');
@@ -1378,6 +1414,38 @@ function cpRender() {
     delete j._fresh;
   });
   g.scrollTop = scrollTop;
+
+  // Show only first 50 — Load More for rest (prevents 600+ DOM nodes)
+  var cards = g.querySelectorAll('.card');
+  cards.forEach(function(c, i) { c.style.display = i < 50 ? '' : 'none'; });
+  var existing = document.getElementById('loadMoreWrap');
+  if (existing) existing.remove();
+  if (cpDisp.length > 50) {
+    var shown = Math.min(50, cards.length);
+    var lm = document.createElement('div');
+    lm.id = 'loadMoreWrap';
+    lm.style.cssText = 'grid-column:1/-1;text-align:center;padding:24px 0 40px';
+    lm.innerHTML = '<button onclick="cpLoadMore(this)" style="background:var(--cyan);color:#000;border:none;border-radius:9px;padding:12px 32px;font-size:13px;font-weight:700;font-family:var(--mono);cursor:pointer">&#9660; Show ' + (cpDisp.length - shown) + ' more jobs</button>';
+    g.appendChild(lm);
+  }
+}
+
+var cpShownCount = 50;
+function cpLoadMore(btn) {
+  var g = document.getElementById('grid');
+  var cards = g.querySelectorAll('.card');
+  var next = cpShownCount + 100;
+  cards.forEach(function(c, i) { if (i < next) c.style.display = ''; });
+  cpShownCount = next;
+  var lmw = document.getElementById('loadMoreWrap');
+  if (lmw) lmw.remove();
+  if (cpShownCount < cards.length) {
+    var lm = document.createElement('div');
+    lm.id = 'loadMoreWrap';
+    lm.style.cssText = 'grid-column:1/-1;text-align:center;padding:24px 0 40px';
+    lm.innerHTML = '<button onclick="cpLoadMore(this)" style="background:var(--cyan);color:#000;border:none;border-radius:9px;padding:12px 32px;font-size:13px;font-weight:700;font-family:var(--mono);cursor:pointer">&#9660; Show ' + (cards.length - cpShownCount) + ' more jobs</button>';
+    g.appendChild(lm);
+  }
 }
 
 function cpToggleSave(id, btn) {
@@ -1437,32 +1505,22 @@ function manualRefresh() {
   var btn = document.getElementById('rfbtn');
   btn.textContent = 'Refreshing...'; btn.disabled = true;
   fetch('/api/jobs?limit=1000')
-    .then(function(r){ return r.json(); })
+    .then(function(r){return r.json();})
     .then(function(data){
-      var added = 0;
-      (data.jobs||[]).filter(function(j){
-        return isUSAJob(j.location) && !cpAll.find(function(x){ return x.id === j.id; });
-      }).forEach(function(j){
-        var desc = (j.desc||'').replace(/<[^>]+>/g,'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
-        cpAll.unshift({id:j.id,title:j.title,company:j.company,location:j.location||'United States',
-          type:j.type||'Full-time',level:j.level||'mid',salMin:j.salaryMin||0,salMax:j.salaryMax||0,
-          desc:desc,reqs:j.reqs||[],tags:j.tags||[],isNew:true,postedAgo:'just now',
-          applyUrl:j.applyUrl||'#',remote:j.remote||false,sector:j.sector||'All',
-          featured:false,source:j.source||'API',
-          applied:Math.floor(Math.random()*10)+2,trend:'rising',_fresh:true});
-        added++;
-      });
-      cpUpdateStats(); cpBuildSectors(); cpBuildCoPills(); applyFilters();
-      btn.textContent = 'Refresh'; btn.disabled = false;
-      document.getElementById('lu').textContent = new Date().toLocaleTimeString();
-      cpSecs = 300;
-      cpShowToast(added > 0 ? added + ' new jobs added!' : 'Up to date!');
+      var added=0;
+      (data.jobs||[]).filter(function(j){return isUSAJob(j.location)&&!cpAll.find(function(x){return x.id===j.id;});})
+      .forEach(function(j){cpAll.unshift(Object.assign(cpMapJob(j),{isNew:true,postedAgo:'just now',trend:'rising',_fresh:true}));added++;});
+      try{localStorage.setItem('cp_jobs_cache_v1',JSON.stringify(cpAll));localStorage.setItem('cp_jobs_cache_ts',Date.now().toString());}catch(e){}
+      cpUpdateStats();cpBuildSectors();cpBuildCoPills();applyFilters();
+      btn.textContent='Refresh';btn.disabled=false;
+      document.getElementById('lu').textContent=new Date().toLocaleTimeString();
+      cpSecs=300;
+      cpShowToast(added>0?added+' new jobs added!':'Up to date!');
     })
     .catch(function(){
-      cpInjectNew();
-      btn.textContent = 'Refresh'; btn.disabled = false;
-      document.getElementById('lu').textContent = new Date().toLocaleTimeString();
-      cpSecs = 300;
+      btn.textContent='Refresh';btn.disabled=false;
+      cpSecs=300;
+      cpShowToast('Could not reach server');
     });
 }
 
@@ -1497,10 +1555,10 @@ setInterval(function(){
 }, 1000);
 
 setTimeout(function(){
-  cpInitCounts();
-  cpUpdateStats(); cpBuildSectors(); cpBuildCoPills(); applyFilters();
-  var lu = document.getElementById('lu'); if (lu) lu.textContent = new Date().toLocaleTimeString();
-}, 200);
+  cpBuildSectors();cpBuildCoPills();cpInitCounts();
+  var lu=document.getElementById('lu');if(lu) lu.textContent=new Date().toLocaleTimeString();
+  cpFetchRealJobs();
+},200);
 
 
 /* === RESUME OPTIMIZER === */
@@ -2674,26 +2732,36 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 
 
-function isUSAJob(loc){
-  var l=(loc||'').toLowerCase();
-  var nonUSA=['india','canada','uk','united kingdom','germany','france','australia','singapore','netherlands','poland','ireland','israel','brazil','mexico','europe','london','berlin','toronto','bangalore','bengaluru','mumbai','hyderabad','delhi','pune','chennai','sydney','melbourne','amsterdam','paris','zurich','warsaw','prague','bucharest','manila','jakarta','remote - emea','remote - apac','remote - uk','remote - eu','remote - canada','emea','apac','latam'];
-  return !nonUSA.some(function(c){return l.includes(c);});
-}
-function cpFetchRealJobs() {
-  fetch('/api/jobs?limit=1000')
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if (!data.jobs || !data.jobs.length) return;
-      cpAll = data.jobs.filter(function(j){return isUSAJob(j.location);}).map(function(j){
-        return {id:j.id,title:j.title,company:j.company,location:j.location||'United States',
-          type:j.type||'Full-time',level:j.level||'mid',salMin:j.salaryMin||0,salMax:j.salaryMax||0,
-          desc:j.desc||'',reqs:j.reqs||[],tags:j.tags||[],isNew:j.isNew||false,
-          postedAgo:j.postedAgo||'Recently',applyUrl:j.applyUrl||'#',remote:j.remote||false,
-          sector:j.sector||'All',featured:j.featured||false,source:j.source||'API',
-          applied:j.applied||Math.floor(Math.random()*500)+10,trend:j.trend||'normal'};
-      });
+function cpFetchRealJobs(){
+  var CACHE_KEY='cp_jobs_cache_v1';
+  var CACHE_TS='cp_jobs_cache_ts';
+
+  // Load from cache instantly — show jobs immediately on refresh
+  try {
+    var cached = localStorage.getItem(CACHE_KEY);
+    var cachedTs = localStorage.getItem(CACHE_TS);
+    if(cached){
+      cpAll = JSON.parse(cached);
       cpInitCounts();
-      cpUpdateStats(); cpBuildSectors(); cpBuildCoPills(); applyFilters();
+      cpUpdateStats();cpBuildSectors();cpBuildCoPills();applyFilters();
+      var lu=document.getElementById('lu');
+      if(lu&&cachedTs) lu.textContent=new Date(parseInt(cachedTs)).toLocaleTimeString();
+    }
+  } catch(e){}
+
+  // Always fetch fresh from API in background
+  fetch('/api/jobs?limit=1000')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(!data.jobs||!data.jobs.length) return;
+      cpAll=data.jobs.filter(function(j){return isUSAJob(j.location);}).map(cpMapJob);
+      // Save to cache
+      try{
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cpAll));
+        localStorage.setItem(CACHE_TS, Date.now().toString());
+      }catch(e){}
+      cpInitCounts();
+      cpUpdateStats();cpBuildSectors();cpBuildCoPills();applyFilters();
       var lu=document.getElementById('lu');
       if(lu&&data.lastUpdated) lu.textContent=new Date(data.lastUpdated).toLocaleTimeString();
       var lastTs=data.lastUpdated;
@@ -2701,23 +2769,25 @@ function cpFetchRealJobs() {
         fetch('/api/jobs?limit=1000'+(lastTs?'&since='+encodeURIComponent(lastTs):''))
           .then(function(r){return r.json();})
           .then(function(d){
+            var added=0;
             (d.jobs||[]).filter(function(j){return isUSAJob(j.location)&&!cpAll.find(function(x){return x.id===j.id;});})
-            .forEach(function(j){
-              cpAll.unshift({id:j.id,title:j.title,company:j.company,location:j.location||'US',
-                type:j.type||'Full-time',level:j.level||'mid',salMin:j.salaryMin||0,salMax:j.salaryMax||0,
-                desc:j.desc||'',reqs:j.reqs||[],tags:j.tags||[],isNew:true,postedAgo:'just now',
-                applyUrl:j.applyUrl||'#',remote:j.remote||false,sector:'All',featured:false,
-                source:j.source||'API',applied:Math.floor(Math.random()*10)+2,trend:'rising',_fresh:true});
-            });
+            .forEach(function(j){cpAll.unshift(Object.assign(cpMapJob(j),{isNew:true,postedAgo:'just now',trend:'rising',_fresh:true}));added++;});
             if(d.lastUpdated) lastTs=d.lastUpdated;
-            cpUpdateStats(); cpBuildCoPills(); applyFilters();
-            var el=document.getElementById('lu'); if(el) el.textContent=new Date().toLocaleTimeString();
+            if(added){
+              try{localStorage.setItem(CACHE_KEY,JSON.stringify(cpAll));localStorage.setItem(CACHE_TS,Date.now().toString());}catch(e){}
+              cpUpdateStats();cpBuildCoPills();applyFilters();
+            }
+            var el=document.getElementById('lu');if(el) el.textContent=new Date().toLocaleTimeString();
           }).catch(function(){});
       },5*60*1000);
     })
-    .catch(function(){console.log('[ClearPath] Using demo data');});
+    .catch(function(){
+      // API failed - if cache was loaded, keep showing it
+      if(!cpAll.length){cpUpdateStats();cpBuildCoPills();applyFilters();}
+    });
 }
-setTimeout(function(){cpFetchRealJobs();},1000);
+
+
 
 </script>
 
