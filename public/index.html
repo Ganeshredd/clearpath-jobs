@@ -630,10 +630,10 @@ body {
       </div>
     </div>
 
-    <!-- Filters -->
-    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
-      <input class="input" style="flex:1;min-width:200px;max-width:320px" id="feed-search" placeholder="Search title, company, skill…" oninput="filterFeed()">
-      <select class="select" style="min-width:130px" id="feed-level" onchange="filterFeed()">
+    <!-- Single row filters -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;flex-wrap:nowrap;overflow-x:auto">
+      <input class="input" style="flex:2;min-width:160px;background:var(--bg3)" id="feed-search" placeholder="🔍 Search title, company, skill…" oninput="filterFeed()">
+      <select class="select" style="flex:1;min-width:110px;background:var(--bg3)" id="feed-level" onchange="filterFeed()">
         <option value="">All Levels</option>
         <option value="intern">Intern</option>
         <option value="entry">Entry</option>
@@ -641,47 +641,27 @@ body {
         <option value="senior">Senior</option>
         <option value="lead">Lead</option>
       </select>
-      <select class="select" style="min-width:140px" id="feed-remote-filter" onchange="filterFeed()">
+      <select class="select" style="flex:1;min-width:130px;background:var(--bg3)" id="feed-remote-filter" onchange="filterFeed()">
         <option value="">All Locations</option>
-        <option value="remote">Remote Only</option>
-        <option value="onsite">On-site Only</option>
-        <option value="hybrid">Hybrid Only</option>
+        <option value="remote">Remote</option>
+        <option value="hybrid">Hybrid</option>
+        <option value="onsite">On-site</option>
       </select>
-      <select class="select" style="min-width:130px" id="feed-type-filter" onchange="filterFeed()">
+      <select class="select" style="flex:1;min-width:120px;background:var(--bg3)" id="feed-type-filter" onchange="filterFeed()">
         <option value="">All Types</option>
         <option value="Full-time">Full-time</option>
         <option value="Part-time">Part-time</option>
         <option value="Contract">Contract</option>
         <option value="Internship">Internship</option>
       </select>
-      <select class="select" style="min-width:140px" id="feed-salary-filter" onchange="filterFeed()">
-        <option value="">Any Salary</option>
-        <option value="60">$60k+</option>
-        <option value="80">$80k+</option>
-        <option value="100">$100k+</option>
-        <option value="120">$120k+</option>
-        <option value="150">$150k+</option>
-        <option value="180">$180k+</option>
-      </select>
-      <select class="select" style="min-width:130px" id="feed-source-filter" onchange="filterFeed()">
-        <option value="">All Sources</option>
-        <option value="Greenhouse">Greenhouse</option>
-        <option value="Lever">Lever</option>
-        <option value="Ashby">Ashby</option>
-        <option value="Workday">Workday</option>
-        <option value="SmartRecruiters">SmartRecruiters</option>
-        <option value="LinkedIn">LinkedIn</option>
-        <option value="Workable">Workable</option>
-        <option value="BambooHR">BambooHR</option>
-      </select>
-      <select class="select" style="min-width:130px" id="feed-date-filter" onchange="filterFeed()">
+      <select class="select" style="flex:1;min-width:120px;background:var(--bg3)" id="feed-date-filter" onchange="filterFeed()">
         <option value="">Any Time</option>
-        <option value="6">Last 6 hours</option>
-        <option value="24">Last 24 hours</option>
+        <option value="6">Last 6h ⚡</option>
+        <option value="24">Last 24h</option>
         <option value="72">Last 3 days</option>
         <option value="168">Last week</option>
       </select>
-      <button class="btn btn-ghost btn-sm" onclick="clearFilters()" style="white-space:nowrap">Clear</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()" style="white-space:nowrap;flex-shrink:0">✕ Clear</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div id="feed-active-filters" style="display:flex;gap:6px;flex-wrap:wrap"></div>
@@ -1158,7 +1138,7 @@ let filteredJobs = [];
 let feedOffset = 0;
 
 function clearFilters() {
-  ['feed-search','feed-level','feed-remote-filter','feed-type-filter','feed-salary-filter','feed-source-filter','feed-date-filter'].forEach(id => {
+  ['feed-search','feed-level','feed-remote-filter','feed-type-filter','feed-date-filter'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -1170,8 +1150,7 @@ function filterFeed() {
   const lv     = document.getElementById('feed-level')?.value||'';
   const rm     = document.getElementById('feed-remote-filter')?.value||'';
   const tp     = document.getElementById('feed-type-filter')?.value||'';
-  const sal    = parseInt(document.getElementById('feed-salary-filter')?.value||'0')||0;
-  const src    = document.getElementById('feed-source-filter')?.value||'';
+
   const hrs    = parseInt(document.getElementById('feed-date-filter')?.value||'0')||0;
 
   filteredJobs = allJobs.filter(j => {
@@ -1182,8 +1161,7 @@ function filterFeed() {
     if (rm === 'onsite' && j.remote) return false;
     if (rm === 'hybrid' && !/hybrid/i.test(j.location||j.type||j.desc||''  )) return false;
     if (tp && !(j.type||'').toLowerCase().includes(tp.toLowerCase())) return false;
-    if (sal && (!j.salaryMin || j.salaryMin < sal)) return false;
-    if (src && !(j.source||'').includes(src)) return false;
+
     if (hrs && j.postedAt) {
       const age = (Date.now() - new Date(j.postedAt).getTime()) / 3600000;
       if (age > hrs) return false;
@@ -1199,8 +1177,7 @@ function filterFeed() {
     if (lv) active.push(lv);
     if (rm) active.push(rm);
     if (tp) active.push(tp);
-    if (sal) active.push('$'+sal+'k+');
-    if (src) active.push(src);
+
     if (hrs) active.push('Last '+hrs+'h');
     activeEl.innerHTML = active.map(a => `<span style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);color:var(--accent2);padding:2px 8px;border-radius:20px;font-size:11px">${a}</span>`).join('');
   }
