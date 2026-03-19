@@ -165,6 +165,16 @@ function requireAuth(req, res, next) {
 const CLEARANCE_DENY = ['security clearance','clearance required','top secret','ts/sci','secret clearance','active secret','public trust','polygraph','dod clearance','classified information','q clearance','sci eligible','sensitive compartmented','national security clearance','special access program'];
 const CYBER_ALLOW = ['security engineer','security analyst','security architect','security researcher','security consultant','security specialist','security operations','security manager','security director','security officer','ciso','vp of security','head of security','principal security','staff security','lead security','penetration test','pentesting','pen test','ethical hack','red team','blue team','threat intelligence','threat hunter','incident response','digital forensics','dfir','malware analyst','vulnerability','soc analyst','soc engineer','detection engineer','devsecops','appsec','application security','product security','platform security','cloud security','network security','infrastructure security','endpoint security','identity security','iam engineer','zero trust','information security','infosec','cybersecurity','cyber security','grc analyst','compliance engineer','privacy engineer','data security','container security','siem engineer'];
 
+
+function isUSAJob(loc) {
+  const l = (loc||'').toLowerCase().trim();
+  if (!l || l === 'remote' || l === 'work from home' || l === 'united states' || l === 'us' || l === 'usa') return true;
+  if (l.startsWith('remote') && !/(canada|uk|europe|india|emea|apac|latam|global|international)/.test(l)) return true;
+  const FOREIGN = ['india','canada','united kingdom','england','scotland','wales','germany','france','australia','singapore','netherlands','poland','ireland','israel','brazil','mexico','spain','italy','sweden','norway','denmark','finland','belgium','switzerland','austria','portugal','czechia','romania','hungary','ukraine','russia','china','japan','south korea','taiwan','hong kong','new zealand','south africa','nigeria','egypt','argentina','colombia','chile','peru','indonesia','malaysia','thailand','philippines','vietnam','turkey','saudi arabia','uae','dubai','qatar','london','berlin','paris','amsterdam','zurich','toronto','montreal','vancouver','sydney','melbourne','bangalore','bengaluru','mumbai','hyderabad','delhi','tokyo','osaka','seoul','beijing','shanghai','taipei','tel aviv','stockholm','oslo','copenhagen','brussels','vienna','geneva','lisbon','madrid','barcelona','rome','milan','warsaw','prague','moscow','emea','apac','latam','europe','asia','global','international','worldwide'];
+  if (FOREIGN.some(f => l.includes(f))) return false;
+  return true;
+}
+
 const isClearanceJob = t => CLEARANCE_DENY.some(k=>(t||'').toLowerCase().includes(k));
 const isCyberJob = (title,desc) => CYBER_ALLOW.some(k=>((title||'')+' '+(desc||'')).toLowerCase().includes(k));
 
@@ -449,6 +459,7 @@ async function scrapeAll() {
         results.forEach(job => {
           const combined = (job.title+' '+job.desc).toLowerCase();
           if (isClearanceJob(combined)) { blocked++; cache.stats.clearanceBlocked++; return; }
+          if (!isUSAJob(job.location)) return;
           if (job.postedAt && new Date(job.postedAt).getTime() < JAN_2026) return;
           const level = levelOf(job.title);
           const salary = salaryOf(level, job.company);
