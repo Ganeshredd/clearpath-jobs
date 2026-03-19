@@ -1,39 +1,3 @@
-/**
- * ClearPath OS — job-boards.js v3
- * ─────────────────────────────────────────────────────────────────────────
- * Dynamic Tangent-style job intelligence — 6 sources in parallel:
- *
- *  Source 1: LinkedIn         FREE  — no key, 95% of US employers
- *  Source 2: JSearch          $10/mo — Indeed + Glassdoor + ZipRecruiter
- *  Source 3: Adzuna           FREE  — 250 req/day
- *  Source 4: Indeed Publisher FREE  — direct Indeed feed
- *  Source 5: Jobicy           FREE  — remote cybersecurity jobs API
- *  Source 6: RemoteOK         FREE  — remote security jobs RSS
- *  Source 7: USAJobs          FREE  — US government / federal cyber jobs
- *  Source 8: Himalayas        FREE  — remote-first companies feed
- *
- * HOW DT GETS JOBS (the real answer):
- * DT claims "50,000+ career pages, ≤5 min detection."
- * They use a paid data provider (most likely JobsPikr or Coresignal)
- * PLUS direct ATS scraping (same as server.js) PLUS job board APIs.
- *
- * To match DT's job volume exactly, add one of:
- *   - JobsPikr API:      jobspikr.com         (~$200-500/mo, 150K+ live jobs)
- *   - Coresignal:        coresignal.com        (~$500+/mo)
- *   - Fantastic.jobs:    fantastic.jobs/api    (~$99/mo, 54 ATS platforms)
- *   - Apify actors:      apify.com             (pay per run, any ATS)
- *
- * API Keys (set in Railway → Variables):
- *   JSEARCH_KEY      = RapidAPI key  → rapidapi.com/jsearch  (free: 200/mo)
- *   ADZUNA_APP_ID    = Adzuna ID     → developer.adzuna.com  (free)
- *   ADZUNA_APP_KEY   = Adzuna key
- *   INDEED_KEY       = Publisher ID  → indeed.com/publisher  (free)
- *   JOBSPIKR_USER    = JobsPikr username (paid)
- *   JOBSPIKR_PASS    = JobsPikr password
- *   FANTASTIC_KEY    = Fantastic.jobs API key (paid)
- *   APIFY_TOKEN      = Apify token for ATS actors (pay per run)
- * ─────────────────────────────────────────────────────────────────────────
- */
 
 'use strict';
 
