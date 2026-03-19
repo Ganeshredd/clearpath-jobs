@@ -2721,12 +2721,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function isUSAJob(loc){
   var l = (loc || '').toLowerCase().trim();
+  // Empty or clearly generic = allow
   if (!l || l === 'remote' || l === 'united states' || l === 'us' || l === 'usa') return true;
-  var blocked = ['india','canada','uk','united kingdom','great britain','england','scotland','wales','germany','france','australia','singapore','netherlands','poland','ireland','israel','brazil','mexico','spain','italy','sweden','norway','denmark','finland','belgium','switzerland','austria','portugal','czechia','czech republic','romania','hungary','ukraine','russia','china','japan','south korea','korea','taiwan','hong kong','new zealand','south africa','nigeria','kenya','egypt','argentina','colombia','chile','peru','venezuela','indonesia','malaysia','thailand','philippines','vietnam','pakistan','bangladesh','sri lanka','nepal','turkey','saudi arabia','uae','dubai','qatar','london','berlin','paris','amsterdam','zurich','toronto','montreal','vancouver','sydney','melbourne','brisbane','bangalore','bengaluru','mumbai','hyderabad','delhi','pune','chennai','kolkata','noida','gurugram','gurgaon','tokyo','osaka','seoul','beijing','shanghai','taipei','tel aviv','stockholm','oslo','copenhagen','helsinki','brussels','vienna','geneva','lisbon','madrid','barcelona','rome','milan','warsaw','prague','budapest','bucharest','kyiv','moscow','manila','jakarta','kuala lumpur','bangkok','lagos','nairobi','cape town','mexico city','bogota','lima','santiago','sao paulo','buenos aires','ottawa','calgary','edmonton','winnipeg','quebec','emea','apac','latam','amer','eu','europe','asia','africa','oceania','remote - emea','remote - apac','remote - uk','remote - eu','remote - canada','remote - india','remote - europe','remote - international','remote - global','global','international','worldwide'];
+  if (l === 'work from home' || l === 'wfh' || l === 'anywhere' || l === 'multiple locations') return true;
+  if (/^remote/.test(l) && !/(canada|uk|europe|india|emea|apac|latam|global|international)/.test(l)) return true;
+  // Block only explicit foreign countries/cities
+  var blocked = [
+    'india','canada','united kingdom','great britain','england','scotland','wales',
+    'germany','france','australia','singapore','netherlands','poland','ireland',
+    'israel','brazil','mexico','spain','italy','sweden','norway','denmark','finland',
+    'belgium','switzerland','austria','portugal','czechia','czech republic','romania',
+    'hungary','ukraine','russia','china','japan','south korea','taiwan','hong kong',
+    'new zealand','south africa','nigeria','kenya','egypt','argentina','colombia',
+    'chile','peru','venezuela','indonesia','malaysia','thailand','philippines',
+    'vietnam','pakistan','bangladesh','sri lanka','nepal','turkey','saudi arabia',
+    'uae','dubai','qatar',
+    'london','berlin','paris','amsterdam','zurich','toronto','montreal','vancouver',
+    'sydney','melbourne','brisbane','bangalore','bengaluru','mumbai','hyderabad',
+    'delhi','pune','chennai','kolkata','noida','gurugram','gurgaon','tokyo','osaka',
+    'seoul','beijing','shanghai','taipei','tel aviv','stockholm','oslo','copenhagen',
+    'helsinki','brussels','vienna','geneva','lisbon','madrid','barcelona','rome',
+    'milan','warsaw','prague','budapest','bucharest','kyiv','moscow','manila',
+    'jakarta','kuala lumpur','bangkok','lagos','nairobi','cape town','mexico city',
+    'bogota','lima','santiago','sao paulo','buenos aires','ottawa','calgary',
+    'edmonton','winnipeg','quebec',
+    'remote - emea','remote - apac','remote - uk','remote - eu','remote - canada',
+    'remote - india','remote - europe','remote - international','remote - global',
+    'emea','apac','latam'
+  ];
   if (blocked.some(function(b){ return l.includes(b); })) return false;
-  var usPatterns = [', al',' alabama',', ak',' alaska',', az',' arizona',', ar',' arkansas',', ca',' california',', co',' colorado',', ct',' connecticut',', de',' delaware',', fl',' florida',', ga',' georgia',', hi',' hawaii',', id',' idaho',', il',' illinois',', in',' indiana',', ia',' iowa',', ks',' kansas',', ky',' kentucky',', la',' louisiana',', me',' maine',', md',' maryland',', ma',' massachusetts',', mi',' michigan',', mn',' minnesota',', ms',' mississippi',', mo',' missouri',', mt',' montana',', ne',' nebraska',', nv',' nevada',', nh',' new hampshire',', nj',' new jersey',', nm',' new mexico',', ny',' new york',', nc',' north carolina',', nd',' north dakota',', oh',' ohio',', ok',' oklahoma',', or',' oregon',', pa',' pennsylvania',', ri',' rhode island',', sc',' south carolina',', sd',' south dakota',', tn',' tennessee',', tx',' texas',', ut',' utah',', vt',' vermont',', va',' virginia',', wa',' washington',', wv',' west virginia',', wi',' wisconsin',', wy',' wyoming',', dc',' washington dc','united states','remote, us','remote, usa','remote (us','(us)','us only','new york','san francisco','los angeles','chicago','houston','austin','seattle','boston','denver','atlanta','dallas','miami','phoenix','portland','san jose','san diego','philadelphia','nashville','minneapolis','detroit','baltimore','charlotte','raleigh','salt lake','st. louis','pittsburgh','cincinnati','indianapolis','kansas city','columbus','orlando','tampa','sacramento','las vegas'];
-  if (l === 'remote' || l.startsWith('remote')) return true;
-  return usPatterns.some(function(p){ return l.includes(p); });
+  // Default: allow everything else (US companies rarely post non-US jobs without country name)
+  return true;
 }
 var cpRetryCount = 0;
 var cpRetryTimer = null;
