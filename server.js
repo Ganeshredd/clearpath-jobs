@@ -29,28 +29,34 @@ async function initDb() {
     console.warn('[DB] No DATABASE_URL — running in memory-only mode');
     return;
   }
-  try {
-    const { Pool } = require('pg');
-    const dbUrl = process.env.DATABASE_URL || '';
-    console.log('[DB] Connecting to:', dbUrl.slice(0, 50) + '...');
-    // Railway internal connections don't use SSL
-    const isInternal = dbUrl.includes('.railway.internal');
-    db = new Pool({
-      connectionString: dbUrl,
-      ssl: isInternal ? false : { rejectUnauthorized: false },
-      max: 10,
-      connectionTimeoutMillis: 15000,
-      idleTimeoutMillis: 30000,
-    });
-    await db.query('SELECT 1');
-    dbAvailable = true;
-    console.log('[DB] PostgreSQL connected ✓');
-    await runMigrations();
-    await loadJobsFromDb();
-  } catch(e) {
-    console.warn('[DB] PostgreSQL unavailable:', e.message);
-    dbAvailable = false;
+  const { Pool } = require('pg');
+  const dbUrl = process.env.DATABASE_URL || '';
+  console.log('[DB] Attempting connection to:', dbUrl.replace(/:[^:@]+@/, ':***@'));
+ 
+  // Try internal (no SSL) first, then fall back to SSL
+  const configs = [
+    { connectionString: dbUrl, ssl: false },
+    { connectionString: dbUrl, ssl: { rejectUnauthorized: false } },
+    { connectionString: dbUrl.replace('postgres://', 'postgresql://'), ssl: false },
+    { connectionString: dbUrl.replace('postgres://', 'postgresql://'), ssl: { rejectUnauthorized: false } },
+  ];
+ 
+  for (const config of configs) {
+    try {
+      const pool = new Pool({ ...config, max: 10, connectionTimeoutMillis: 8000 });
+      await pool.query('SELECT 1');
+      db = pool;
+      dbAvailable = true;
+      console.log('[DB] PostgreSQL connected ✓ (ssl:', JSON.stringify(config.ssl), ')');
+      await runMigrations();
+      await loadJobsFromDb();
+      return;
+    } catch(e) {
+      console.warn('[DB] Config failed:', JSON.stringify(config.ssl), '|', e.message.slice(0, 80));
+    }
   }
+  console.error('[DB] All connection attempts failed — running in memory-only mode');
+  dbAvailable = false;
 }
  
 async function runMigrations() {
@@ -67,7 +73,7 @@ async function runMigrations() {
     CREATE TABLE IF NOT EXISTS jobs (
       id TEXT PRIMARY KEY, title TEXT NOT NULL, company TEXT NOT NULL,
       location TEXT, type TEXT DEFAULT 'Full-time', level TEXT DEFAULT 'mid',
-      salary_min INTEGER, salary_max INTEGER, desc TEXT, tags TEXT[],
+      salary_min INTEGER, salary_max INTEGER, job_desc TEXT, tags TEXT[],
       apply_url TEXT, posted_at TIMESTAMPTZ, posted_ago TEXT, source TEXT,
       remote BOOLEAN DEFAULT FALSE, h1b_sponsor BOOLEAN DEFAULT FALSE,
       is_new BOOLEAN DEFAULT TRUE,
@@ -85,7 +91,7 @@ async function runMigrations() {
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id UUID REFERENCES users(id) ON DELETE CASCADE,
       job_id TEXT, job_title TEXT, company TEXT,
-      content TEXT NOT NULL, type TEXT DEFAULT 'resume',
+      resume_content TEXT NOT NULL, type TEXT DEFAULT 'resume',
       track_token TEXT UNIQUE DEFAULT encode(gen_random_bytes(16),'hex'),
       view_count INTEGER DEFAULT 0, last_viewed TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW()
@@ -797,4 +803,3 @@ app.listen(PORT, async () => {
   await initDb();
   scrapeAll();
 });
- 
