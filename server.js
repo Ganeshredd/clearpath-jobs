@@ -197,54 +197,56 @@ async function scrapeLever(company, token) {
 }
 
 async function scrapeWorkday(company, tenant, ns) {
-  // Try multiple namespace + subdomain combinations — Workday tenants vary widely
-  const namespaces = [
-    ns,
-    'External_Career_Site',
-    'External',
-    'careers',
-    'external',
-    tenant,
-  ].filter((v, i, a) => v && a.indexOf(v) === i);
+  // Browser-like headers — Workday blocks plain axios without them
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Origin': `https://${tenant}.wd5.myworkdayjobs.com`,
+    'Referer': `https://${tenant}.wd5.myworkdayjobs.com/${ns}`,
+  };
 
+  // Try primary namespace first, then fallbacks — sequential to avoid rate limits
+  const namespacesToTry = [ns, 'External_Career_Site', 'External', 'careers', tenant]
+    .filter((v, i, a) => v && a.indexOf(v) === i);
   const subdomains = [
     `${tenant}.wd5.myworkdayjobs.com`,
     `${tenant}.wd1.myworkdayjobs.com`,
     `${tenant}.wd3.myworkdayjobs.com`,
-    `${tenant}.wd12.myworkdayjobs.com`,
   ];
 
-  const mapJob = (j, subdomain, nsUsed) => ({
-    id:        `wd-${tenant}-${(j.externalPath||j.title||Math.random().toString(36).slice(2,8)).replace(/[\/?=&]/g,'-')}`,
-    title:     clean(j.title),
-    company,
+  const mapJobs = (jobs, subdomain, nsUsed) => jobs.map(j => ({
+    id:        `wd-${tenant}-${(j.externalPath || j.title || Math.random().toString(36).slice(2,8)).replace(/[^a-z0-9-]/gi, '-').slice(0, 60)}`,
+    title:     clean(j.title), company,
     location:  clean(j.locationsText || 'United States'),
     type:      'Full-time',
     desc:      clean(j.jobDescription || '').slice(0, 400),
     applyUrl:  `https://${subdomain}/${nsUsed}/job/${j.externalPath || ''}`,
-    postedAt:  j.postedOn,
-    postedAgo: timeAgo(j.postedOn),
-    source:    'Workday',
+    postedAt:  j.postedOn, postedAgo: timeAgo(j.postedOn), source: 'Workday',
     remote:    /remote/i.test(j.locationsText || ''),
     tags:      extractTags(j.title + ' ' + (j.jobDescription || ''))
-  });
+  }));
 
   for (const subdomain of subdomains) {
-    for (const nsUsed of namespaces) {
+    for (const nsUsed of namespacesToTry) {
       try {
         const url = `https://${subdomain}/wday/cxs/${tenant}/${nsUsed}/jobs`;
-        const { data } = await axios.post(url,
-          { limit: 100, offset: 0, searchText: 'security', appliedFacets: {} },
-          { headers: { 'Content-Type': 'application/json' }, timeout: 8000 }
-        );
-        const jobs = data.jobPostings || [];
-        if (jobs.length > 0) {
-          return jobs.map(j => mapJob(j, subdomain, nsUsed));
+        // Try with empty searchText first (more results), then 'security'
+        for (const searchText of ['', 'security']) {
+          try {
+            const { data } = await axios.post(url,
+              { limit: 100, offset: 0, searchText, appliedFacets: {} },
+              { headers, timeout: 15000 }
+            );
+            const jobs = (data.jobPostings || []);
+            if (jobs.length > 0) return mapJobs(jobs, subdomain, nsUsed);
+          } catch(e) { /* try next searchText */ }
         }
-      } catch(e) { /* try next combination */ }
+      } catch(e) { /* try next namespace */ }
     }
   }
-  throw new Error(`All Workday combinations failed for ${tenant}`);
+  throw new Error(`Workday failed: ${tenant}`);
 }
 
 async function scrapeAshby(company, token) {
@@ -325,20 +327,9 @@ async function scrapeIcims(company, customerId) {
 
 // Jobvite — public JSON API, no auth needed
 async function scrapeJobvite(company, token) {
-  // Try multiple Jobvite URL patterns
-  const urls = [
-    `https://jobs.jobvite.com/api/jobs?c=${token}&limit=100`,
-    `https://jobs.jobvite.com/${token}/jobs.json`,
-    `https://careers.jobvite.com/api/jobs?c=${token}&limit=100`,
-  ];
-  let jobs = [];
-  for (const url of urls) {
-    try {
-      const { data } = await axios.get(url, { timeout: 10000 });
-      const found = data.requisitions || data.jobs || (Array.isArray(data) ? data : []);
-      if (found.length > 0) { jobs = found; break; }
-    } catch(e) { continue; }
-  }
+  const url = `https://jobs.jobvite.com/api/jobs?c=${token}&d=&l=&limit=100&cf=Security`;
+  const { data } = await axios.get(url, { timeout: 12000 });
+  const jobs = data.requisitions || [];
   return jobs.map(j => ({
     id:        `jv-${token}-${j.id}`,
     title:     clean(j.title),
@@ -357,19 +348,10 @@ async function scrapeJobvite(company, token) {
 
 // Rippling — public ATS jobs endpoint
 async function scrapeRippling(company, token) {
-  const urls = [
-    `https://app.rippling.com/api/o/ats/jobs/?company_slug=${token}&status=ACTIVE&limit=100`,
-    `https://ats.rippling.com/api/jobs?company=${token}`,
-  ];
-  let jobs = [];
-  for (const url of urls) {
-    try {
-      const { data } = await axios.get(url, { timeout: 10000, headers: { 'Accept': 'application/json' } });
-      const found = data.results || (Array.isArray(data) ? data : []);
-      if (found.length > 0) { jobs = found; break; }
-    } catch(e) { continue; }
-  }
-  return jobs.map(j => ({
+  const url = `https://app.rippling.com/api/o/ats/jobs/?company_slug=${token}&status=ACTIVE&limit=100`;
+  const { data } = await axios.get(url, { timeout: 12000, headers: { 'Accept': 'application/json' } });
+  const jobs = data.results || data || [];
+  return (Array.isArray(jobs) ? jobs : []).map(j => ({
     id:        `rp-${token}-${j.id || j.job_id}`,
     title:     clean(j.title || j.name || ''),
     company,
@@ -681,7 +663,6 @@ const COMPANIES = [
   // 💻 BIG TECH & CLOUD
   // ══════════════════════════════════════════════════════════
   { fn:'smartrecruiter', company:'Google',              token:'Google'                },
-  { fn:'smartrecruiter', company:'JPMorgan Chase',      token:'JPMORGANCHASE'         },
   { fn:'workday', company:'Microsoft',   tenant:'microsoftcorporation', ns:'External_Career_Site' },
   { fn:'workday', company:'Apple',       tenant:'apple',      ns:'apple'              },
   { fn:'workday', company:'Meta',        tenant:'meta4',      ns:'Meta_External_Jobs' },
