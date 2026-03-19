@@ -31,11 +31,15 @@ async function initDb() {
   }
   try {
     const { Pool } = require('pg');
+    const dbUrl = process.env.DATABASE_URL || '';
+    console.log('[DB] Connecting to:', dbUrl.slice(0, 50) + '...');
+    // Railway internal connections don't use SSL
+    const isInternal = dbUrl.includes('.railway.internal');
     db = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
+      connectionString: dbUrl,
+      ssl: isInternal ? false : { rejectUnauthorized: false },
       max: 10,
-      connectionTimeoutMillis: 10000,
+      connectionTimeoutMillis: 15000,
       idleTimeoutMillis: 30000,
     });
     await db.query('SELECT 1');
@@ -793,3 +797,4 @@ app.listen(PORT, async () => {
   await initDb();
   scrapeAll();
 });
+ 
