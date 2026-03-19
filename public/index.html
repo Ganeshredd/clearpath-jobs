@@ -1450,7 +1450,7 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') cpClos
 function manualRefresh() {
   var btn = document.getElementById('rfbtn');
   btn.textContent = 'Refreshing...'; btn.disabled = true;
-  fetch('/api/jobs?limit=200')
+  fetch('/api/jobs?limit=1000')
     .then(function(r){ return r.json(); })
     .then(function(data){
       var added = 0;
@@ -2694,7 +2694,7 @@ function isUSAJob(loc){
   return !nonUSA.some(function(c){return l.includes(c);});
 }
 function cpFetchRealJobs() {
-  fetch('/api/jobs?limit=300')
+  fetch('/api/jobs?limit=1000')
     .then(function(r){ return r.json(); })
     .then(function(data){
       if (!data.jobs || !data.jobs.length) return;
@@ -2712,7 +2712,7 @@ function cpFetchRealJobs() {
       if(lu&&data.lastUpdated) lu.textContent=new Date(data.lastUpdated).toLocaleTimeString();
       var lastTs=data.lastUpdated;
       setInterval(function(){
-        fetch('/api/jobs?limit=50'+(lastTs?'&since='+encodeURIComponent(lastTs):''))
+        fetch('/api/jobs?limit=1000'+(lastTs?'&since='+encodeURIComponent(lastTs):''))
           .then(function(r){return r.json();})
           .then(function(d){
             (d.jobs||[]).filter(function(j){return isUSAJob(j.location)&&!cpAll.find(function(x){return x.id===j.id;});})
@@ -2731,7 +2731,12 @@ function cpFetchRealJobs() {
     })
     .catch(function(){console.log('[ClearPath] Using demo data');});
 }
-setTimeout(function(){cpFetchRealJobs();},1000);
+// Show loading state immediately
+(function(){
+  var g = document.getElementById('grid');
+  if (g) g.innerHTML = '<div class="empty"><div class="empty-ico" style="font-size:32px;animation:spin .8s linear infinite;display:inline-block">&#9696;</div><div class="empty-h" style="margin-top:12px">Loading jobs...</div><p class="empty-p">Fetching live cybersecurity jobs</p></div>';
+})();
+setTimeout(function(){cpFetchRealJobs();},500);
 
 </script>
 
