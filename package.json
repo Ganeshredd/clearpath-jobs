@@ -1,7 +1,7 @@
 {
   "name": "clearpath-os",
   "version": "3.0.0",
-  "description": "ClearPath OS — Dynamic Tangent-style cybersecurity career platform",
+  "description": "ClearPath OS — career platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
