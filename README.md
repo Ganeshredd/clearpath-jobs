@@ -1,7 +1,5 @@
 # ClearPath OS 🛡
 
-**Dynamic Tangent-style cybersecurity career platform.**
-
 - 🔍 Live jobs from 130+ company career APIs (Greenhouse, Lever, Ashby, Workday, SmartRecruiters...)
 - ⚡ No Competition — jobs posted < 6 hours ago
 - 📋 Application pipeline (Saved → Applied → Interview → Offer)
