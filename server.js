@@ -33,8 +33,10 @@ async function initDb() {
     const { Pool } = require('pg');
     db = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      max: 10
+      ssl: { rejectUnauthorized: false },
+      max: 10,
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
     });
     await db.query('SELECT 1');
     dbAvailable = true;
@@ -774,7 +776,7 @@ cron.schedule('*/5 * * * *', () => scrapeAll());
 app.listen(PORT, async () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║          ClearPath OS v3 — Backend            ║
+║          ClearPath OS v3 — Dynamic Tangent Backend            ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  Web:           http://localhost:${PORT}                         ║
 ║  Auth:          POST /api/auth/register | /api/auth/login       ║
