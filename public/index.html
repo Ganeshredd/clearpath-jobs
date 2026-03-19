@@ -1419,7 +1419,7 @@ function cpRender() {
     if (ab) ab.addEventListener('click', function(e){ e.stopPropagation(); cpRecordApply(j.id); });
     var ar = d.querySelector('.apply-row');
     if (ar) ar.addEventListener('click', function(e){ e.stopPropagation(); cpRecordApply(j.id); });
-    g.appendChild(d);
+    frag.appendChild(d);
     delete j._fresh;
   });
   var pag = document.createElement('div');
