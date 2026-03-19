@@ -29,11 +29,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── In-memory store ──────────────────────────────────────────────────────
-const _cached = loadJobsCache();
 let store = {
-  jobs: _cached.jobs || [],
+  jobs: [],
   newJobIds: [],       // IDs added in the most recent scrape cycle
-  lastUpdated: _cached.lastUpdated || null,
+  lastUpdated: null,
   isRunning: false,
   stats: { total: 0, clearanceBlocked: 0, errors: [], sources: {}, boards: { linkedin:0, jsearch:0, adzuna:0, indeed:0 } },
   log: []
@@ -42,15 +41,6 @@ let store = {
 // ─── Live Apply Counter ───────────────────────────────────────────────────
 const fs   = require('fs');
 const APPLY_FILE = require('path').join(__dirname, 'apply-counts.json');
-const JOBS_FILE  = require('path').join(__dirname, 'jobs-cache.json');
-
-function saveJobsCache(jobs, lastUpdated) {
-  try { fs.writeFileSync(JOBS_FILE, JSON.stringify({ jobs, lastUpdated })); console.log(`[CACHE] Saved ${jobs.length} jobs to disk`); } catch(e) {}
-}
-function loadJobsCache() {
-  try { if (fs.existsSync(JOBS_FILE)) { const d=JSON.parse(fs.readFileSync(JOBS_FILE,'utf8')); console.log(`[CACHE] Loaded ${(d.jobs||[]).length} jobs from disk`); return d; } } catch(e) {}
-  return { jobs: [], lastUpdated: null };
-}
 let applyCounts = {};
 try { applyCounts = JSON.parse(fs.readFileSync(APPLY_FILE, 'utf8')); } catch(e) {}
 function saveApplyCounts() {
@@ -1211,9 +1201,6 @@ async function scrapeAll() {
   store.lastUpdated = new Date().toISOString();
   store.stats.total = deduped.length;
   store.isRunning   = false;
-
-  // ── Save to disk so jobs survive server restarts instantly ──
-  saveJobsCache(deduped, store.lastUpdated);
 
   store.log.unshift({
     time:      store.lastUpdated,
