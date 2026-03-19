@@ -971,8 +971,8 @@ var CP_SECTORS = {
 };
 
 var cpAll = []; // populated from /api/jobs
-var CP_PAGE_SIZE = 30;   // cards per page
-var cpPage = 1;          // current page (1-based)
+var CP_PAGE_SIZE = 30;
+var cpPage = 1;
 
 var cpNJ = []; // no longer used - Refresh fetches real API
 
@@ -1032,11 +1032,13 @@ function cpH1bPanel(co) {
 */
 
 var CP_API_BASE = (function() {
-  // Change this to your deployed server URL, e.g.:
-  // 'https://clearpath-counter.railway.app'
-  // 'https://clearpath-counter.onrender.com'
-  var local = 'http://localhost:3002';
-  return local;
+  // Auto-detect: use same origin in production, skip SSE if localhost
+  var origin = window.location.origin;
+  // Only attempt SSE if we're on a real server (not file:// or localhost dev)
+  if (origin.indexOf('localhost') === -1 && origin.indexOf('127.0.0.1') === -1 && origin !== 'null') {
+    return origin;
+  }
+  return ''; // empty = SSE disabled, use offline mode
 })();
 
 var CP_COUNTS_KEY = 'cp_live_counts_v2';
@@ -1060,6 +1062,7 @@ function cpInitCounts() {
 }
 
 function cpConnectSSE() {
+  if (!CP_API_BASE) return; // No server configured — offline mode
   if (typeof EventSource === 'undefined') return; // SSE not supported
   try {
     cpSseSource = new EventSource(CP_API_BASE + '/stream');
@@ -1170,7 +1173,9 @@ function cpGetCount(j) {
   return cpLiveCounts[j.id] !== undefined ? cpLiveCounts[j.id] : (j.applied || 0);
 }
 function cpRefreshApplicantBars() {
-  cpDisp.forEach(function(j) {
+  // Only update cards that are currently visible in the DOM (current page)
+  var start = (cpPage - 1) * CP_PAGE_SIZE;
+  cpDisp.slice(start, start + CP_PAGE_SIZE).forEach(function(j) {
     var card = document.getElementById('card-' + j.id);
     if (!card) return;
     var bar = card.querySelector('.app-bar');
@@ -1275,25 +1280,23 @@ function applyFilters() {
   else if (cpSortBy === 'co') filtered.sort(function(a,b){ return a.company.localeCompare(b.company); });
   else filtered.sort(function(a,b){ return (cpIsNewJob(b) ? 1 : 0) - (cpIsNewJob(a) ? 1 : 0); });
   cpDisp = filtered;
-  cpPage = 1; // reset to first page on every filter change
+  cpPage = 1;
   document.getElementById('cnt').textContent = filtered.length;
   cpRender();
 }
 
-// Returns true only if the job was genuinely posted recently based on postedAgo text
+// Show New badge only if genuinely recent (≤6 hrs)
 function cpIsNewJob(j) {
   var ago = (j.postedAgo || '').toLowerCase().trim();
   if (!ago || ago === 'recently') return false;
   if (ago === 'just now') return true;
-  var minMatch = ago.match(/^(\d+)\s*min/);
-  if (minMatch) return true;
-  var hrMatch = ago.match(/^(\d+)\s*h/);
-  if (hrMatch) return parseInt(hrMatch[1]) <= 6;
-  return false;
+  if (/^\d+\s*min/.test(ago)) return true;
+  var hr = ago.match(/^(\d+)\s*h/);
+  return hr ? parseInt(hr[1]) <= 6 : false;
 }
 
 function cpRenderCard(j) {
-  var isExp   = (cpExpandedId === j.id);
+  var isExp = (cpExpandedId === j.id);
   var isSaved = cpSaved.has(j.id);
   var d = document.createElement('div');
   d.className = 'card' + (j.featured ? ' feat' : '') + (isExp ? ' exp' : '') + (j._fresh ? ' fresh' : '');
@@ -1302,80 +1305,44 @@ function cpRenderCard(j) {
     if (e.target.closest('.save-btn,.apply-btn,.opt-btn,.apply-row,.apply-cta,.coll-btn')) return;
     var wasExp = d.classList.contains('exp');
     var prev = document.querySelector('.card.exp');
-    if (prev && prev !== d) {
-      prev.classList.remove('exp');
-      var prevArr = prev.querySelector('.card-arr');
-      if (prevArr) prevArr.innerHTML = '&#9660;';
-    }
-    if (wasExp) {
-      d.classList.remove('exp');
-      var arr = d.querySelector('.card-arr');
-      if (arr) arr.innerHTML = '&#9660;';
-      cpExpandedId = null;
-    } else {
-      d.classList.add('exp');
-      var arr = d.querySelector('.card-arr');
-      if (arr) arr.innerHTML = '&#9650;';
-      cpExpandedId = j.id;
-    }
+    if (prev && prev !== d) { prev.classList.remove('exp'); var pa = prev.querySelector('.card-arr'); if (pa) pa.innerHTML = '&#9660;'; }
+    if (wasExp) { d.classList.remove('exp'); var a = d.querySelector('.card-arr'); if (a) a.innerHTML = '&#9660;'; cpExpandedId = null; }
+    else { d.classList.add('exp'); var a = d.querySelector('.card-arr'); if (a) a.innerHTML = '&#9650;'; cpExpandedId = j.id; }
   });
   d.innerHTML =
     (j.featured ? '<div class="feat-badge">Featured</div>' : '') +
-    '<div class="card-top">' +
-      '<div class="card-logo">' + cpIni(j.company) + '</div>' +
-      '<div style="flex:1;min-width:0">' +
-        '<div class="card-title">' + j.title + '</div>' +
-        '<div class="card-company">' + j.company + '</div>' +
-        '<div class="card-badges">' +
-          '<span class="src-badge">' + j.source + '</span>' +
-          cpH1bBadge(j.company) +
-        '</div>' +
-      '</div>' +
-      '<div class="card-arr">' + (isExp ? '&#9650;' : '&#9660;') + '</div>' +
-    '</div>' +
+    '<div class="card-top"><div class="card-logo">' + cpIni(j.company) + '</div>' +
+    '<div style="flex:1;min-width:0"><div class="card-title">' + j.title + '</div>' +
+    '<div class="card-company">' + j.company + '</div>' +
+    '<div class="card-badges"><span class="src-badge">' + j.source + '</span>' + cpH1bBadge(j.company) + '</div></div>' +
+    '<div class="card-arr">' + (isExp ? '&#9650;' : '&#9660;') + '</div></div>' +
     '<div class="card-meta">' +
-      '<span class="pill ' + (j.remote ? 'p-remote' : 'p-loc') + '">' + j.location + '</span>' +
-      '<span class="pill p-type">' + (j.type || 'Full-time') + '</span>' +
-      '<span class="pill p-level">' + j.level + '</span>' +
-      (cpIsNewJob(j) ? '<span class="pill p-new">New</span>' : '') +
-      (j.salMin ? '<span class="pill p-sal">$' + j.salMin + 'k&ndash;$' + j.salMax + 'k</span>' : '') +
-    '</div>' +
+    '<span class="pill ' + (j.remote ? 'p-remote' : 'p-loc') + '">' + j.location + '</span>' +
+    '<span class="pill p-type">' + (j.type || 'Full-time') + '</span>' +
+    '<span class="pill p-level">' + j.level + '</span>' +
+    (cpIsNewJob(j) ? '<span class="pill p-new">New</span>' : '') +
+    (j.salMin ? '<span class="pill p-sal">$' + j.salMin + 'k&ndash;$' + j.salMax + 'k</span>' : '') + '</div>' +
     '<p class="card-desc">' + j.desc + '</p>' +
-    '<div class="card-tags">' + (j.tags || []).map(function(t){return '<span class="tag">' + t + '</span>';}).join('') + '</div>' +
+    '<div class="card-tags">' + (j.tags||[]).map(function(t){return '<span class="tag">'+t+'</span>';}).join('') + '</div>' +
     cpApplicantBar(j) +
-    '<div class="card-detail">' +
-      '<div><div class="detail-label">Requirements</div>' +
-      '<div class="req-list">' + (j.reqs || []).map(function(r){return '<div class="req-item">' + r + '</div>';}).join('') + '</div></div>' +
-      cpH1bPanel(j.company) +
-      '<a class="apply-row" href="' + j.applyUrl + '" target="_blank" rel="noopener">' +
-        '<div class="apply-info">' +
-          '<div class="apply-co">' + j.company + '</div>' +
-          '<div class="apply-url">' + cpDomOf(j.applyUrl) + '</div>' +
-        '</div>' +
-        '<button class="apply-cta">Apply Now &#8594;</button>' +
-      '</a>' +
-      '<button class="coll-btn">&#9650; Collapse</button>' +
-    '</div>' +
-    '<div class="card-foot">' +
-      '<span class="foot-time">&#128336; ' + j.postedAgo + '</span>' +
-      '<div class="foot-actions">' +
-        '<button class="save-btn' + (isSaved ? ' saved' : '') + '">' + (isSaved ? '&#9733;' : '&#9734;') + '</button>' +
-        '<button class="opt-btn">&#128196; Optimize Resume</button>' +
-        '<a class="apply-btn" href="' + j.applyUrl + '" target="_blank" rel="noopener">Apply &#8594;</a>' +
-      '</div>' +
-    '</div>';
-  var sv = d.querySelector('.save-btn');
-  sv.addEventListener('click', function(e){ e.stopPropagation(); cpToggleSave(j.id, sv); });
-  var ob = d.querySelector('.opt-btn');
-  ob.addEventListener('click', function(e){ e.stopPropagation(); cpOpenDrawer(j.id); });
+    '<div class="card-detail"><div><div class="detail-label">Requirements</div>' +
+    '<div class="req-list">' + (j.reqs||[]).map(function(r){return '<div class="req-item">'+r+'</div>';}).join('') + '</div></div>' +
+    cpH1bPanel(j.company) +
+    '<a class="apply-row" href="' + j.applyUrl + '" target="_blank" rel="noopener">' +
+    '<div class="apply-info"><div class="apply-co">' + j.company + '</div>' +
+    '<div class="apply-url">' + cpDomOf(j.applyUrl) + '</div></div>' +
+    '<button class="apply-cta">Apply Now &#8594;</button></a>' +
+    '<button class="coll-btn">&#9650; Collapse</button></div>' +
+    '<div class="card-foot"><span class="foot-time">&#128336; ' + j.postedAgo + '</span>' +
+    '<div class="foot-actions">' +
+    '<button class="save-btn' + (isSaved ? ' saved' : '') + '">' + (isSaved ? '&#9733;' : '&#9734;') + '</button>' +
+    '<button class="opt-btn">&#128196; Optimize Resume</button>' +
+    '<a class="apply-btn" href="' + j.applyUrl + '" target="_blank" rel="noopener">Apply &#8594;</a>' +
+    '</div></div>';
+  d.querySelector('.save-btn').addEventListener('click', function(e){ e.stopPropagation(); cpToggleSave(j.id, this); });
+  d.querySelector('.opt-btn').addEventListener('click', function(e){ e.stopPropagation(); cpOpenDrawer(j.id); });
   var cb = d.querySelector('.coll-btn');
-  if (cb) cb.addEventListener('click', function(e){
-    e.stopPropagation();
-    d.classList.remove('exp');
-    var arr = d.querySelector('.card-arr');
-    if (arr) arr.innerHTML = '&#9660;';
-    cpExpandedId = null;
-  });
+  if (cb) cb.addEventListener('click', function(e){ e.stopPropagation(); d.classList.remove('exp'); var a=d.querySelector('.card-arr'); if(a) a.innerHTML='&#9660;'; cpExpandedId=null; });
   var ab = d.querySelector('.apply-btn');
   if (ab) ab.addEventListener('click', function(e){ e.stopPropagation(); cpRecordApply(j.id); });
   var ar = d.querySelector('.apply-row');
@@ -1384,33 +1351,29 @@ function cpRenderCard(j) {
   return d;
 }
 
-function cpRenderPagination(total, page, pageSize) {
-  var totalPages = Math.ceil(total / pageSize);
-  if (totalPages <= 1) return '';
-  var from = (page - 1) * pageSize + 1;
-  var to   = Math.min(page * pageSize, total);
-  var html = '<div id="cpPager" style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 0 8px;flex-wrap:wrap">';
-  html += '<span style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-right:8px">' + from + '–' + to + ' of ' + total + '</span>';
-  html += '<button class="srt' + (page===1?' on':'') + '" onclick="cpGoPage(1)" title="First">« First</button>';
-  html += '<button class="srt" onclick="cpGoPage(' + (page-1) + ')" ' + (page===1?'disabled':'') + '>‹ Prev</button>';
-  var start = Math.max(1, page - 2), end = Math.min(totalPages, page + 2);
-  if (start > 1) html += '<span style="color:var(--tx3);font-family:var(--mono);font-size:11px">…</span>';
-  for (var p = start; p <= end; p++) {
-    html += '<button class="srt' + (p===page?' on':'') + '" onclick="cpGoPage(' + p + ')">' + p + '</button>';
-  }
-  if (end < totalPages) html += '<span style="color:var(--tx3);font-family:var(--mono);font-size:11px">…</span>';
-  html += '<button class="srt" onclick="cpGoPage(' + (page+1) + ')" ' + (page===totalPages?'disabled':'') + '>Next ›</button>';
-  html += '<button class="srt' + (page===totalPages?' on':'') + '" onclick="cpGoPage(' + totalPages + ')" title="Last">Last »</button>';
-  html += '</div>';
-  return html;
+function cpGoPage(p) {
+  var tot = Math.ceil(cpDisp.length / CP_PAGE_SIZE);
+  cpPage = Math.max(1, Math.min(p, tot));
+  document.getElementById('grid').scrollTop = 0;
+  cpRender();
 }
 
-function cpGoPage(p) {
-  var totalPages = Math.ceil(cpDisp.length / CP_PAGE_SIZE);
-  cpPage = Math.max(1, Math.min(p, totalPages));
-  var g = document.getElementById('grid');
-  g.scrollTop = 0;
-  cpRender();
+function cpRenderPager(total, page, ps) {
+  var tot = Math.ceil(total / ps);
+  if (tot <= 1) return '';
+  var from = (page-1)*ps+1, to = Math.min(page*ps, total);
+  var h = '<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:6px;padding:18px 0;flex-wrap:wrap">';
+  h += '<span style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-right:6px">'+from+'–'+to+' of '+total+'</span>';
+  h += '<button class="srt'+(page===1?' on':'')+'" onclick="cpGoPage(1)">«</button>';
+  h += '<button class="srt" onclick="cpGoPage('+(page-1)+')" '+(page===1?'disabled':'')+'>‹</button>';
+  var s=Math.max(1,page-2), e=Math.min(tot,page+2);
+  if(s>1) h+='<span style="color:var(--tx3);font-family:var(--mono)">…</span>';
+  for(var i=s;i<=e;i++) h+='<button class="srt'+(i===page?' on':'')+'" onclick="cpGoPage('+i+')">'+i+'</button>';
+  if(e<tot) h+='<span style="color:var(--tx3);font-family:var(--mono)">…</span>';
+  h += '<button class="srt" onclick="cpGoPage('+(page+1)+')" '+(page===tot?'disabled':'')+'>›</button>';
+  h += '<button class="srt'+(page===tot?' on':'')+'" onclick="cpGoPage('+tot+')">»</button>';
+  h += '</div>';
+  return h;
 }
 
 function cpRender() {
@@ -1419,18 +1382,16 @@ function cpRender() {
     g.innerHTML = '<div class="empty"><div class="empty-ico">&#128269;</div><div class="empty-h">No jobs match</div><p class="empty-p">Try broadening your filters.</p></div>';
     return;
   }
-  var totalPages = Math.ceil(cpDisp.length / CP_PAGE_SIZE);
-  if (cpPage > totalPages) cpPage = totalPages;
-  var start = (cpPage - 1) * CP_PAGE_SIZE;
-  var pageJobs = cpDisp.slice(start, start + CP_PAGE_SIZE);
+  var tot = Math.ceil(cpDisp.length / CP_PAGE_SIZE);
+  if (cpPage > tot) cpPage = tot;
+  var start = (cpPage-1) * CP_PAGE_SIZE;
   var frag = document.createDocumentFragment();
-  pageJobs.forEach(function(j) { frag.appendChild(cpRenderCard(j)); });
-  var pagDiv = document.createElement('div');
-  pagDiv.style.cssText = 'grid-column:1/-1';
-  pagDiv.innerHTML = cpRenderPagination(cpDisp.length, cpPage, CP_PAGE_SIZE);
+  cpDisp.slice(start, start + CP_PAGE_SIZE).forEach(function(j){ frag.appendChild(cpRenderCard(j)); });
+  var pag = document.createElement('div');
+  pag.innerHTML = cpRenderPager(cpDisp.length, cpPage, CP_PAGE_SIZE);
   g.innerHTML = '';
   g.appendChild(frag);
-  if (pagDiv.innerHTML) g.appendChild(pagDiv);
+  if (pag.innerHTML) g.appendChild(pag);
 }
 
 function cpToggleSave(id, btn) {
@@ -1489,7 +1450,7 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') cpClos
 function manualRefresh() {
   var btn = document.getElementById('rfbtn');
   btn.textContent = 'Refreshing...'; btn.disabled = true;
-  fetch('/api/jobs?limit=1000')
+  fetch('/api/jobs?limit=200')
     .then(function(r){ return r.json(); })
     .then(function(data){
       var added = 0;
@@ -2733,7 +2694,7 @@ function isUSAJob(loc){
   return !nonUSA.some(function(c){return l.includes(c);});
 }
 function cpFetchRealJobs() {
-  fetch('/api/jobs?limit=1000')
+  fetch('/api/jobs?limit=300')
     .then(function(r){ return r.json(); })
     .then(function(data){
       if (!data.jobs || !data.jobs.length) return;
@@ -2751,7 +2712,7 @@ function cpFetchRealJobs() {
       if(lu&&data.lastUpdated) lu.textContent=new Date(data.lastUpdated).toLocaleTimeString();
       var lastTs=data.lastUpdated;
       setInterval(function(){
-        fetch('/api/jobs?limit=1000'+(lastTs?'&since='+encodeURIComponent(lastTs):''))
+        fetch('/api/jobs?limit=50'+(lastTs?'&since='+encodeURIComponent(lastTs):''))
           .then(function(r){return r.json();})
           .then(function(d){
             (d.jobs||[]).filter(function(j){return isUSAJob(j.location)&&!cpAll.find(function(x){return x.id===j.id;});})
