@@ -1032,13 +1032,14 @@ function cpH1bPanel(co) {
 */
 
 var CP_API_BASE = (function() {
-  // Auto-detect: use same origin in production, skip SSE if localhost
+  // Change this to your deployed server URL, e.g.:
+  // 'https://clearpath-counter.railway.app'
+  // 'https://clearpath-counter.onrender.com'
   var origin = window.location.origin;
-  // Only attempt SSE if we're on a real server (not file:// or localhost dev)
   if (origin.indexOf('localhost') === -1 && origin.indexOf('127.0.0.1') === -1 && origin !== 'null') {
     return origin;
   }
-  return ''; // empty = SSE disabled, use offline mode
+  return '';
 })();
 
 var CP_COUNTS_KEY = 'cp_live_counts_v2';
@@ -1062,7 +1063,7 @@ function cpInitCounts() {
 }
 
 function cpConnectSSE() {
-  if (!CP_API_BASE) return; // No server configured — offline mode
+  if (!CP_API_BASE) return;
   if (typeof EventSource === 'undefined') return; // SSE not supported
   try {
     cpSseSource = new EventSource(CP_API_BASE + '/stream');
@@ -1173,7 +1174,6 @@ function cpGetCount(j) {
   return cpLiveCounts[j.id] !== undefined ? cpLiveCounts[j.id] : (j.applied || 0);
 }
 function cpRefreshApplicantBars() {
-  // Only update cards that are currently visible in the DOM (current page)
   var start = (cpPage - 1) * CP_PAGE_SIZE;
   cpDisp.slice(start, start + CP_PAGE_SIZE).forEach(function(j) {
     var card = document.getElementById('card-' + j.id);
@@ -1285,70 +1285,14 @@ function applyFilters() {
   cpRender();
 }
 
-// Show New badge only if genuinely recent (≤6 hrs)
+// Show New badge only for just now or within 5 minutes
 function cpIsNewJob(j) {
   var ago = (j.postedAgo || '').toLowerCase().trim();
   if (!ago || ago === 'recently') return false;
   if (ago === 'just now') return true;
-  if (/^\d+\s*min/.test(ago)) return true;
-  var hr = ago.match(/^(\d+)\s*h/);
-  return hr ? parseInt(hr[1]) <= 6 : false;
-}
-
-function cpRenderCard(j) {
-  var isExp = (cpExpandedId === j.id);
-  var isSaved = cpSaved.has(j.id);
-  var d = document.createElement('div');
-  d.className = 'card' + (j.featured ? ' feat' : '') + (isExp ? ' exp' : '') + (j._fresh ? ' fresh' : '');
-  d.id = 'card-' + j.id;
-  d.addEventListener('click', function(e) {
-    if (e.target.closest('.save-btn,.apply-btn,.opt-btn,.apply-row,.apply-cta,.coll-btn')) return;
-    var wasExp = d.classList.contains('exp');
-    var prev = document.querySelector('.card.exp');
-    if (prev && prev !== d) { prev.classList.remove('exp'); var pa = prev.querySelector('.card-arr'); if (pa) pa.innerHTML = '&#9660;'; }
-    if (wasExp) { d.classList.remove('exp'); var a = d.querySelector('.card-arr'); if (a) a.innerHTML = '&#9660;'; cpExpandedId = null; }
-    else { d.classList.add('exp'); var a = d.querySelector('.card-arr'); if (a) a.innerHTML = '&#9650;'; cpExpandedId = j.id; }
-  });
-  d.innerHTML =
-    (j.featured ? '<div class="feat-badge">Featured</div>' : '') +
-    '<div class="card-top"><div class="card-logo">' + cpIni(j.company) + '</div>' +
-    '<div style="flex:1;min-width:0"><div class="card-title">' + j.title + '</div>' +
-    '<div class="card-company">' + j.company + '</div>' +
-    '<div class="card-badges"><span class="src-badge">' + j.source + '</span>' + cpH1bBadge(j.company) + '</div></div>' +
-    '<div class="card-arr">' + (isExp ? '&#9650;' : '&#9660;') + '</div></div>' +
-    '<div class="card-meta">' +
-    '<span class="pill ' + (j.remote ? 'p-remote' : 'p-loc') + '">' + j.location + '</span>' +
-    '<span class="pill p-type">' + (j.type || 'Full-time') + '</span>' +
-    '<span class="pill p-level">' + j.level + '</span>' +
-    (cpIsNewJob(j) ? '<span class="pill p-new">New</span>' : '') +
-    (j.salMin ? '<span class="pill p-sal">$' + j.salMin + 'k&ndash;$' + j.salMax + 'k</span>' : '') + '</div>' +
-    '<p class="card-desc">' + j.desc + '</p>' +
-    '<div class="card-tags">' + (j.tags||[]).map(function(t){return '<span class="tag">'+t+'</span>';}).join('') + '</div>' +
-    cpApplicantBar(j) +
-    '<div class="card-detail"><div><div class="detail-label">Requirements</div>' +
-    '<div class="req-list">' + (j.reqs||[]).map(function(r){return '<div class="req-item">'+r+'</div>';}).join('') + '</div></div>' +
-    cpH1bPanel(j.company) +
-    '<a class="apply-row" href="' + j.applyUrl + '" target="_blank" rel="noopener">' +
-    '<div class="apply-info"><div class="apply-co">' + j.company + '</div>' +
-    '<div class="apply-url">' + cpDomOf(j.applyUrl) + '</div></div>' +
-    '<button class="apply-cta">Apply Now &#8594;</button></a>' +
-    '<button class="coll-btn">&#9650; Collapse</button></div>' +
-    '<div class="card-foot"><span class="foot-time">&#128336; ' + j.postedAgo + '</span>' +
-    '<div class="foot-actions">' +
-    '<button class="save-btn' + (isSaved ? ' saved' : '') + '">' + (isSaved ? '&#9733;' : '&#9734;') + '</button>' +
-    '<button class="opt-btn">&#128196; Optimize Resume</button>' +
-    '<a class="apply-btn" href="' + j.applyUrl + '" target="_blank" rel="noopener">Apply &#8594;</a>' +
-    '</div></div>';
-  d.querySelector('.save-btn').addEventListener('click', function(e){ e.stopPropagation(); cpToggleSave(j.id, this); });
-  d.querySelector('.opt-btn').addEventListener('click', function(e){ e.stopPropagation(); cpOpenDrawer(j.id); });
-  var cb = d.querySelector('.coll-btn');
-  if (cb) cb.addEventListener('click', function(e){ e.stopPropagation(); d.classList.remove('exp'); var a=d.querySelector('.card-arr'); if(a) a.innerHTML='&#9660;'; cpExpandedId=null; });
-  var ab = d.querySelector('.apply-btn');
-  if (ab) ab.addEventListener('click', function(e){ e.stopPropagation(); cpRecordApply(j.id); });
-  var ar = d.querySelector('.apply-row');
-  if (ar) ar.addEventListener('click', function(e){ e.stopPropagation(); cpRecordApply(j.id); });
-  delete j._fresh;
-  return d;
+  var minMatch = ago.match(/^(\d+)\s*min/);
+  if (minMatch) return parseInt(minMatch[1]) <= 5;
+  return false;
 }
 
 function cpGoPage(p) {
@@ -1365,12 +1309,12 @@ function cpRenderPager(total, page, ps) {
   var h = '<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:6px;padding:18px 0;flex-wrap:wrap">';
   h += '<span style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-right:6px">'+from+'–'+to+' of '+total+'</span>';
   h += '<button class="srt'+(page===1?' on':'')+'" onclick="cpGoPage(1)">«</button>';
-  h += '<button class="srt" onclick="cpGoPage('+(page-1)+')" '+(page===1?'disabled':'')+'>‹</button>';
+  h += '<button class="srt" onclick="cpGoPage('+(page-1)+')" '+(page===1?'disabled':'')+'>&#8249;</button>';
   var s=Math.max(1,page-2), e=Math.min(tot,page+2);
   if(s>1) h+='<span style="color:var(--tx3);font-family:var(--mono)">…</span>';
   for(var i=s;i<=e;i++) h+='<button class="srt'+(i===page?' on':'')+'" onclick="cpGoPage('+i+')">'+i+'</button>';
   if(e<tot) h+='<span style="color:var(--tx3);font-family:var(--mono)">…</span>';
-  h += '<button class="srt" onclick="cpGoPage('+(page+1)+')" '+(page===tot?'disabled':'')+'>›</button>';
+  h += '<button class="srt" onclick="cpGoPage('+(page+1)+')" '+(page===tot?'disabled':'')+'>&#8250;</button>';
   h += '<button class="srt'+(page===tot?' on':'')+'" onclick="cpGoPage('+tot+')">»</button>';
   h += '</div>';
   return h;
@@ -1386,7 +1330,98 @@ function cpRender() {
   if (cpPage > tot) cpPage = tot;
   var start = (cpPage-1) * CP_PAGE_SIZE;
   var frag = document.createDocumentFragment();
-  cpDisp.slice(start, start + CP_PAGE_SIZE).forEach(function(j){ frag.appendChild(cpRenderCard(j)); });
+  cpDisp.slice(start, start + CP_PAGE_SIZE).forEach(function(j) {
+    var isExp   = (cpExpandedId === j.id);
+    var isSaved = cpSaved.has(j.id);
+    var d = document.createElement('div');
+    d.className = 'card' + (j.featured ? ' feat' : '') + (isExp ? ' exp' : '') + (j._fresh ? ' fresh' : '');
+    d.id = 'card-' + j.id;
+    d.addEventListener('click', function(e) {
+      if (e.target.closest('.save-btn,.apply-btn,.opt-btn,.apply-row,.apply-cta,.coll-btn')) return;
+      var wasExp = d.classList.contains('exp');
+      // collapse any other expanded card in-place
+      var prev = document.querySelector('.card.exp');
+      if (prev && prev !== d) {
+        prev.classList.remove('exp');
+        var prevArr = prev.querySelector('.card-arr');
+        if (prevArr) prevArr.innerHTML = '&#9660;';
+      }
+      if (wasExp) {
+        d.classList.remove('exp');
+        var arr = d.querySelector('.card-arr');
+        if (arr) arr.innerHTML = '&#9660;';
+        cpExpandedId = null;
+      } else {
+        d.classList.add('exp');
+        var arr = d.querySelector('.card-arr');
+        if (arr) arr.innerHTML = '&#9650;';
+        cpExpandedId = j.id;
+      }
+    });
+    d.innerHTML =
+      (j.featured ? '<div class="feat-badge">Featured</div>' : '') +
+      '<div class="card-top">' +
+        '<div class="card-logo">' + cpIni(j.company) + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="card-title">' + j.title + '</div>' +
+          '<div class="card-company">' + j.company + '</div>' +
+          '<div class="card-badges">' +
+            '<span class="src-badge">' + j.source + '</span>' +
+            cpH1bBadge(j.company) +
+          '</div>' +
+        '</div>' +
+        '<div class="card-arr">' + (isExp ? '&#9650;' : '&#9660;') + '</div>' +
+      '</div>' +
+      '<div class="card-meta">' +
+        '<span class="pill ' + (j.remote ? 'p-remote' : 'p-loc') + '">' + j.location + '</span>' +
+        '<span class="pill p-type">' + (j.type || 'Full-time') + '</span>' +
+        '<span class="pill p-level">' + j.level + '</span>' +
+        (cpIsNewJob(j) ? '<span class="pill p-new">New</span>' : '') +
+        (j.salMin ? '<span class="pill p-sal">$' + j.salMin + 'k&ndash;$' + j.salMax + 'k</span>' : '') +
+      '</div>' +
+      '<p class="card-desc">' + j.desc + '</p>' +
+      '<div class="card-tags">' + (j.tags || []).map(function(t){return '<span class="tag">' + t + '</span>';}).join('') + '</div>' +
+      cpApplicantBar(j) +
+      '<div class="card-detail">' +
+        '<div><div class="detail-label">Requirements</div>' +
+        '<div class="req-list">' + (j.reqs || []).map(function(r){return '<div class="req-item">' + r + '</div>';}).join('') + '</div></div>' +
+        cpH1bPanel(j.company) +
+        '<a class="apply-row" href="' + j.applyUrl + '" target="_blank" rel="noopener">' +
+          '<div class="apply-info">' +
+            '<div class="apply-co">' + j.company + '</div>' +
+            '<div class="apply-url">' + cpDomOf(j.applyUrl) + '</div>' +
+          '</div>' +
+          '<button class="apply-cta">Apply Now &#8594;</button>' +
+        '</a>' +
+        '<button class="coll-btn">&#9650; Collapse</button>' +
+      '</div>' +
+      '<div class="card-foot">' +
+        '<span class="foot-time">&#128336; ' + j.postedAgo + '</span>' +
+        '<div class="foot-actions">' +
+          '<button class="save-btn' + (isSaved ? ' saved' : '') + '">' + (isSaved ? '&#9733;' : '&#9734;') + '</button>' +
+          '<button class="opt-btn">&#128196; Optimize Resume</button>' +
+          '<a class="apply-btn" href="' + j.applyUrl + '" target="_blank" rel="noopener">Apply &#8594;</a>' +
+        '</div>' +
+      '</div>';
+    var sv = d.querySelector('.save-btn');
+    sv.addEventListener('click', function(e){ e.stopPropagation(); cpToggleSave(j.id, sv); });
+    var ob = d.querySelector('.opt-btn');
+    ob.addEventListener('click', function(e){ e.stopPropagation(); cpOpenDrawer(j.id); });
+    var cb = d.querySelector('.coll-btn');
+    if (cb) cb.addEventListener('click', function(e){
+      e.stopPropagation();
+      d.classList.remove('exp');
+      var arr = d.querySelector('.card-arr');
+      if (arr) arr.innerHTML = '&#9660;';
+      cpExpandedId = null;
+    });
+    var ab = d.querySelector('.apply-btn');
+    if (ab) ab.addEventListener('click', function(e){ e.stopPropagation(); cpRecordApply(j.id); });
+    var ar = d.querySelector('.apply-row');
+    if (ar) ar.addEventListener('click', function(e){ e.stopPropagation(); cpRecordApply(j.id); });
+    g.appendChild(d);
+    delete j._fresh;
+  });
   var pag = document.createElement('div');
   pag.innerHTML = cpRenderPager(cpDisp.length, cpPage, CP_PAGE_SIZE);
   g.innerHTML = '';
@@ -2639,19 +2674,14 @@ function saveUserProvider(provider) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Check for existing session
-  var session = null;
-  try { session = JSON.parse(localStorage.getItem('resumeiq-session')); } catch(e) {}
-  if(session && session.user) {
-    loginUser(session.user, session.name || session.user);
-  } else {
-    document.getElementById('loginScreen').style.display = 'flex';
-  }
-  // Enter key on login fields
-  ['authUser','authPass','authName','authConfirm'].forEach(function(fid){
-    var el = document.getElementById(fid);
-    if(el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') doAuth(); });
-  });
+  // Skip login — boot directly as guest
+  document.getElementById('loginScreen').style.display = 'none';
+  currentUser = 'guest';
+  var av = document.getElementById('userAvatar');
+  if(av) av.textContent = 'G';
+  var pn = document.getElementById('profileName');
+  if(pn) pn.textContent = 'Guest';
+  bootApp();
 });
 
 
@@ -2685,19 +2715,66 @@ document.addEventListener('DOMContentLoaded', function() {
   try{window.loginUser=loginUser;}catch(e){}
   try{window.switchProfile=switchProfile;}catch(e){}
   try{window.switchTab=switchTab;}catch(e){}
+  try{window.cpGoPage=cpGoPage;}catch(e){}
 })();
 
 
 function isUSAJob(loc){
-  var l=(loc||'').toLowerCase();
-  var nonUSA=['india','canada','uk','united kingdom','germany','france','australia','singapore','netherlands','poland','ireland','israel','brazil','mexico','europe','london','berlin','toronto','bangalore','bengaluru','mumbai','hyderabad','delhi','pune','chennai','sydney','melbourne','amsterdam','paris','zurich','warsaw','prague','bucharest','manila','jakarta','remote - emea','remote - apac','remote - uk','remote - eu','remote - canada','emea','apac','latam'];
-  return !nonUSA.some(function(c){return l.includes(c);});
+  var l = (loc || '').toLowerCase().trim();
+  if (!l || l === 'remote' || l === 'united states' || l === 'us' || l === 'usa') return true;
+  var blocked = ['india','canada','uk','united kingdom','great britain','england','scotland','wales','germany','france','australia','singapore','netherlands','poland','ireland','israel','brazil','mexico','spain','italy','sweden','norway','denmark','finland','belgium','switzerland','austria','portugal','czechia','czech republic','romania','hungary','ukraine','russia','china','japan','south korea','korea','taiwan','hong kong','new zealand','south africa','nigeria','kenya','egypt','argentina','colombia','chile','peru','venezuela','indonesia','malaysia','thailand','philippines','vietnam','pakistan','bangladesh','sri lanka','nepal','turkey','saudi arabia','uae','dubai','qatar','london','berlin','paris','amsterdam','zurich','toronto','montreal','vancouver','sydney','melbourne','brisbane','bangalore','bengaluru','mumbai','hyderabad','delhi','pune','chennai','kolkata','noida','gurugram','gurgaon','tokyo','osaka','seoul','beijing','shanghai','taipei','tel aviv','stockholm','oslo','copenhagen','helsinki','brussels','vienna','geneva','lisbon','madrid','barcelona','rome','milan','warsaw','prague','budapest','bucharest','kyiv','moscow','manila','jakarta','kuala lumpur','bangkok','lagos','nairobi','cape town','mexico city','bogota','lima','santiago','sao paulo','buenos aires','ottawa','calgary','edmonton','winnipeg','quebec','emea','apac','latam','amer','eu','europe','asia','africa','oceania','remote - emea','remote - apac','remote - uk','remote - eu','remote - canada','remote - india','remote - europe','remote - international','remote - global','global','international','worldwide'];
+  if (blocked.some(function(b){ return l.includes(b); })) return false;
+  var usPatterns = [', al',' alabama',', ak',' alaska',', az',' arizona',', ar',' arkansas',', ca',' california',', co',' colorado',', ct',' connecticut',', de',' delaware',', fl',' florida',', ga',' georgia',', hi',' hawaii',', id',' idaho',', il',' illinois',', in',' indiana',', ia',' iowa',', ks',' kansas',', ky',' kentucky',', la',' louisiana',', me',' maine',', md',' maryland',', ma',' massachusetts',', mi',' michigan',', mn',' minnesota',', ms',' mississippi',', mo',' missouri',', mt',' montana',', ne',' nebraska',', nv',' nevada',', nh',' new hampshire',', nj',' new jersey',', nm',' new mexico',', ny',' new york',', nc',' north carolina',', nd',' north dakota',', oh',' ohio',', ok',' oklahoma',', or',' oregon',', pa',' pennsylvania',', ri',' rhode island',', sc',' south carolina',', sd',' south dakota',', tn',' tennessee',', tx',' texas',', ut',' utah',', vt',' vermont',', va',' virginia',', wa',' washington',', wv',' west virginia',', wi',' wisconsin',', wy',' wyoming',', dc',' washington dc','united states','remote, us','remote, usa','remote (us','(us)','us only','new york','san francisco','los angeles','chicago','houston','austin','seattle','boston','denver','atlanta','dallas','miami','phoenix','portland','san jose','san diego','philadelphia','nashville','minneapolis','detroit','baltimore','charlotte','raleigh','salt lake','st. louis','pittsburgh','cincinnati','indianapolis','kansas city','columbus','orlando','tampa','sacramento','las vegas'];
+  if (l === 'remote' || l.startsWith('remote')) return true;
+  return usPatterns.some(function(p){ return l.includes(p); });
 }
+var cpRetryCount = 0;
+var cpRetryTimer = null;
+var cpPollingStarted = false;
+
+function cpShowLoading(msg) {
+  var g = document.getElementById('grid');
+  if (g) g.innerHTML = '<div class="empty"><div class="empty-ico" style="font-size:36px;opacity:.5">&#128269;</div><div class="empty-h" style="margin-top:12px">'+(msg||'Loading jobs…')+'</div><p class="empty-p" id="cpLoadMsg">Connecting…</p></div>';
+}
+
+function cpStartPolling(lastTs) {
+  if (cpPollingStarted) return;
+  cpPollingStarted = true;
+  setInterval(function(){
+    fetch('/api/jobs?limit=1000'+(lastTs?'&since='+encodeURIComponent(lastTs):''))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        (d.jobs||[]).filter(function(j){return isUSAJob(j.location)&&!cpAll.find(function(x){return x.id===j.id;});})
+        .forEach(function(j){
+          cpAll.unshift({id:j.id,title:j.title,company:j.company,location:j.location||'US',
+            type:j.type||'Full-time',level:j.level||'mid',salMin:j.salaryMin||0,salMax:j.salaryMax||0,
+            desc:j.desc||'',reqs:j.reqs||[],tags:j.tags||[],isNew:true,postedAgo:'just now',
+            applyUrl:j.applyUrl||'#',remote:j.remote||false,sector:'All',featured:false,
+            source:j.source||'API',applied:Math.floor(Math.random()*10)+2,trend:'rising',_fresh:true});
+        });
+        if(d.lastUpdated) lastTs=d.lastUpdated;
+        cpUpdateStats(); cpBuildCoPills(); applyFilters();
+        var el=document.getElementById('lu'); if(el) el.textContent=new Date().toLocaleTimeString();
+      }).catch(function(){});
+  }, 5*60*1000);
+}
+
 function cpFetchRealJobs() {
+  var m = document.getElementById('cpLoadMsg');
+  if (m) m.textContent = 'Attempt '+(cpRetryCount+1)+' — fetching jobs…';
   fetch('/api/jobs?limit=1000')
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if (!data.jobs || !data.jobs.length) return;
+      if (!data.jobs || !data.jobs.length) {
+        cpRetryCount++;
+        var wait = Math.min(10000, 3000 + cpRetryCount*1000);
+        var m2 = document.getElementById('cpLoadMsg');
+        if (m2) m2.textContent = 'Backend warming up… retrying in '+Math.round(wait/1000)+'s (attempt '+cpRetryCount+')';
+        if (cpRetryCount < 30) cpRetryTimer = setTimeout(cpFetchRealJobs, wait);
+        return;
+      }
+      if (cpRetryTimer) { clearTimeout(cpRetryTimer); cpRetryTimer = null; }
+      cpRetryCount = 0;
       cpAll = data.jobs.filter(function(j){return isUSAJob(j.location);}).map(function(j){
         return {id:j.id,title:j.title,company:j.company,location:j.location||'United States',
           type:j.type||'Full-time',level:j.level||'mid',salMin:j.salaryMin||0,salMax:j.salaryMax||0,
@@ -2710,33 +2787,18 @@ function cpFetchRealJobs() {
       cpUpdateStats(); cpBuildSectors(); cpBuildCoPills(); applyFilters();
       var lu=document.getElementById('lu');
       if(lu&&data.lastUpdated) lu.textContent=new Date(data.lastUpdated).toLocaleTimeString();
-      var lastTs=data.lastUpdated;
-      setInterval(function(){
-        fetch('/api/jobs?limit=1000'+(lastTs?'&since='+encodeURIComponent(lastTs):''))
-          .then(function(r){return r.json();})
-          .then(function(d){
-            (d.jobs||[]).filter(function(j){return isUSAJob(j.location)&&!cpAll.find(function(x){return x.id===j.id;});})
-            .forEach(function(j){
-              cpAll.unshift({id:j.id,title:j.title,company:j.company,location:j.location||'US',
-                type:j.type||'Full-time',level:j.level||'mid',salMin:j.salaryMin||0,salMax:j.salaryMax||0,
-                desc:j.desc||'',reqs:j.reqs||[],tags:j.tags||[],isNew:true,postedAgo:'just now',
-                applyUrl:j.applyUrl||'#',remote:j.remote||false,sector:'All',featured:false,
-                source:j.source||'API',applied:Math.floor(Math.random()*10)+2,trend:'rising',_fresh:true});
-            });
-            if(d.lastUpdated) lastTs=d.lastUpdated;
-            cpUpdateStats(); cpBuildCoPills(); applyFilters();
-            var el=document.getElementById('lu'); if(el) el.textContent=new Date().toLocaleTimeString();
-          }).catch(function(){});
-      },5*60*1000);
+      cpStartPolling(data.lastUpdated);
     })
-    .catch(function(){console.log('[ClearPath] Using demo data');});
+    .catch(function(){
+      cpRetryCount++;
+      var wait = Math.min(10000, 3000+cpRetryCount*1000);
+      var m3 = document.getElementById('cpLoadMsg');
+      if (m3) m3.textContent = 'Connection error — retrying in '+Math.round(wait/1000)+'s';
+      if (cpRetryCount < 30) setTimeout(cpFetchRealJobs, wait);
+    });
 }
-// Show loading state immediately
-(function(){
-  var g = document.getElementById('grid');
-  if (g) g.innerHTML = '<div class="empty"><div class="empty-ico" style="font-size:32px;animation:spin .8s linear infinite;display:inline-block">&#9696;</div><div class="empty-h" style="margin-top:12px">Loading jobs...</div><p class="empty-p">Fetching live cybersecurity jobs</p></div>';
-})();
-setTimeout(function(){cpFetchRealJobs();},500);
+cpShowLoading('Loading jobs…');
+setTimeout(function(){cpFetchRealJobs();}, 300);
 
 </script>
 
@@ -3965,19 +4027,14 @@ function saveUserProvider(provider) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Check for existing session
-  var session = null;
-  try { session = JSON.parse(localStorage.getItem('resumeiq-session')); } catch(e) {}
-  if(session && session.user) {
-    loginUser(session.user, session.name || session.user);
-  } else {
-    document.getElementById('loginScreen').style.display = 'flex';
-  }
-  // Enter key on login fields
-  ['authUser','authPass','authName','authConfirm'].forEach(function(fid){
-    var el = document.getElementById(fid);
-    if(el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') doAuth(); });
-  });
+  // Skip login — boot directly as guest
+  document.getElementById('loginScreen').style.display = 'none';
+  currentUser = 'guest';
+  var av = document.getElementById('userAvatar');
+  if(av) av.textContent = 'G';
+  var pn = document.getElementById('profileName');
+  if(pn) pn.textContent = 'Guest';
+  bootApp();
 });
 
 
@@ -4011,7 +4068,6 @@ document.addEventListener('DOMContentLoaded', function() {
   try{window.loginUser=loginUser;}catch(e){}
   try{window.switchProfile=switchProfile;}catch(e){}
   try{window.switchTab=switchTab;}catch(e){}
-  try{window.cpGoPage=cpGoPage;}catch(e){}
 })();
 
 </script>
