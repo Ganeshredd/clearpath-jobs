@@ -1497,15 +1497,9 @@ setInterval(function(){
 }, 1000);
 
 setTimeout(function(){
-  // Show loading spinner while real jobs load
-  var g = document.getElementById('grid');
-  if (g) g.innerHTML = '<div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:14px"><div style="width:32px;height:32px;border:2px solid rgba(255,255,255,0.1);border-top-color:#00d4ff;border-radius:50%;animation:spin 1s linear infinite"></div><p style="font-size:12px;color:#8888aa;font-family:monospace">Loading live jobs from 490+ companies...</p></div>';
-  cpBuildSectors();
-  cpBuildCoPills();
   cpInitCounts();
+  cpUpdateStats(); cpBuildSectors(); cpBuildCoPills(); applyFilters();
   var lu = document.getElementById('lu'); if (lu) lu.textContent = new Date().toLocaleTimeString();
-  // Fetch real jobs immediately
-  cpFetchRealJobs();
 }, 200);
 
 
@@ -2723,7 +2717,7 @@ function cpFetchRealJobs() {
     })
     .catch(function(){console.log('[ClearPath] Using demo data');});
 }
-// cpFetchRealJobs called in boot sequence above
+setTimeout(function(){cpFetchRealJobs();},1000);
 
 </script>
 
