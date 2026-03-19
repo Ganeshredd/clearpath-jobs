@@ -1,7 +1,6 @@
 /**
  * ClearPath OS — Backend Server v3
  * ─────────────────────────────────────────────────────────────────────────
- * Dynamic Tangent-style architecture:
  *   ✓ PostgreSQL persistence (jobs survive restarts)
  *   ✓ User accounts + JWT auth
  *   ✓ Per-candidate job matching & scoring
@@ -450,7 +449,6 @@ async function scrapeAll() {
         results.forEach(job => {
           const combined = (job.title+' '+job.desc).toLowerCase();
           if (isClearanceJob(combined)) { blocked++; cache.stats.clearanceBlocked++; return; }
-          if (!isCyberJob(job.title, job.desc)) return;
           if (job.postedAt && new Date(job.postedAt).getTime() < JAN_2026) return;
           const level = levelOf(job.title);
           const salary = salaryOf(level, job.company);
