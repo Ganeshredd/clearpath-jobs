@@ -274,15 +274,33 @@ async function scrapeSmartRecruiter(company, token) {
 }
  
 async function scrapeWorkday(company, tenant, ns) {
-  const namespaces = [ns,'External_Career_Site','External','careers',tenant].filter((v,i,a)=>v&&a.indexOf(v)===i);
-  const subdomains = [`${tenant}.wd5.myworkdayjobs.com`,`${tenant}.wd1.myworkdayjobs.com`,`${tenant}.wd3.myworkdayjobs.com`];
-  const headers = { 'Content-Type':'application/json', 'Accept':'application/json', 'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept-Language':'en-US,en;q=0.9', 'Origin':`https://${tenant}.wd5.myworkdayjobs.com`, 'Referer':`https://${tenant}.wd5.myworkdayjobs.com/${ns}` };
+  // Only try primary namespace first, then 2 fallbacks — keeps it fast
+  const namespaces = [ns, 'External_Career_Site', 'External'].filter((v,i,a)=>v&&a.indexOf(v)===i);
+  // Only try wd5 (most common) — fail fast
+  const subdomains = [`${tenant}.wd5.myworkdayjobs.com`, `${tenant}.wd1.myworkdayjobs.com`];
+  const headers = {
+    'Content-Type':'application/json', 'Accept':'application/json',
+    'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept-Language':'en-US,en;q=0.9',
+  };
+  const mapJob = (j, subdomain, nsUsed) => ({
+    id:`wd-${tenant}-${(j.externalPath||j.title||Math.random().toString(36).slice(2,8)).replace(/[^a-z0-9-]/gi,'-').slice(0,60)}`,
+    title:clean(j.title), company, location:clean(j.locationsText||'United States'),
+    type:'Full-time', desc:clean(j.jobDescription||'').slice(0,400),
+    applyUrl:`https://${subdomain}/${nsUsed}/job/${j.externalPath||''}`,
+    postedAt:j.postedOn, postedAgo:timeAgo(j.postedOn), source:'Workday',
+    remote:/remote/i.test(j.locationsText||''), tags:extractTags(j.title+' '+(j.jobDescription||''))
+  });
   for (const subdomain of subdomains) {
     for (const nsUsed of namespaces) {
       try {
-        const { data } = await axios.post(`https://${subdomain}/wday/cxs/${tenant}/${nsUsed}/jobs`, { limit:100, offset:0, searchText:'', appliedFacets:{} }, { headers, timeout:12000 });
+        const { data } = await axios.post(
+          `https://${subdomain}/wday/cxs/${tenant}/${nsUsed}/jobs`,
+          { limit:100, offset:0, searchText:'', appliedFacets:{} },
+          { headers, timeout:6000 }  // 6s timeout — fail fast
+        );
         const jobs = data.jobPostings||[];
-        if (jobs.length>0) return jobs.map(j => ({ id:`wd-${tenant}-${(j.externalPath||j.title||Math.random().toString(36).slice(2,8)).replace(/[^a-z0-9-]/gi,'-').slice(0,60)}`, title:clean(j.title), company, location:clean(j.locationsText||'United States'), type:'Full-time', desc:clean(j.jobDescription||'').slice(0,400), applyUrl:`https://${subdomain}/${nsUsed}/job/${j.externalPath||''}`, postedAt:j.postedOn, postedAgo:timeAgo(j.postedOn), source:'Workday', remote:/remote/i.test(j.locationsText||''), tags:extractTags(j.title+' '+(j.jobDescription||'')) }));
+        if (jobs.length>0) return jobs.map(j => mapJob(j, subdomain, nsUsed));
       } catch(e) { /* try next */ }
     }
   }
