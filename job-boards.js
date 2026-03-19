@@ -1,4 +1,5 @@
 
+
 'use strict';
 
 const axios   = require('axios');
@@ -35,10 +36,18 @@ function timeAgo(dateStr) {
 }
 
 function isUSJob(loc) {
-  const l = (loc||'').toLowerCase();
-  if (!l||/^remote$/.test(l)||l.includes('united states')||l.includes('usa')||l.includes(' us')) return true;
-  if (/\b(india|canada|uk|united kingdom|germany|france|australia|singapore|israel|brazil|mexico|china|japan|south korea)\b/.test(l)) return false;
-  if (/remote.*emea|remote.*apac|remote.*india|remote.*canada|remote.*uk/.test(l)) return false;
+  const l = (loc||'').toLowerCase().trim();
+  // Empty or generic = allow (most ATS jobs without location are US-based)
+  if (!l || l === 'remote' || l === 'work from home' || l === 'wfh' || l === 'anywhere' || l === 'multiple locations' || l === 'us' || l === 'usa' || l === 'united states') return true;
+  // Remote is OK unless explicitly non-US
+  if (l.startsWith('remote') && !/(canada|uk|europe|india|emea|apac|latam|global|international|worldwide)/.test(l)) return true;
+  // Block known foreign countries and cities
+  const FOREIGN = ['india','canada','united kingdom','great britain','england','scotland','wales','germany','france','australia','singapore','netherlands','poland','ireland','israel','brazil','mexico','spain','italy','sweden','norway','denmark','finland','belgium','switzerland','austria','portugal','czechia','romania','hungary','ukraine','russia','china','japan','south korea','taiwan','hong kong','new zealand','south africa','nigeria','egypt','argentina','colombia','chile','peru','indonesia','malaysia','thailand','philippines','vietnam','turkey','saudi arabia','uae','dubai','qatar','london','berlin','paris','amsterdam','zurich','toronto','montreal','vancouver','sydney','melbourne','bangalore','bengaluru','mumbai','hyderabad','delhi','pune','chennai','tokyo','osaka','seoul','beijing','shanghai','taipei','tel aviv','stockholm','oslo','copenhagen','helsinki','brussels','vienna','geneva','lisbon','madrid','barcelona','rome','milan','warsaw','prague','budapest','moscow','manila','jakarta','kuala lumpur','bangkok','cairo','nairobi','cape town','bogota','lima','santiago','sao paulo','emea','apac','latam','europe','asia','africa','global','international','worldwide'];
+  if (FOREIGN.some(f => l.includes(f))) return false;
+  // Positive US signals — state names, US cities, state abbreviations
+  const US_SIGNALS = ['alabama','alaska','arizona','arkansas','california','colorado','connecticut','delaware','florida','georgia','hawaii','idaho','illinois','indiana','iowa','kansas','kentucky','louisiana','maine','maryland','massachusetts','michigan','minnesota','mississippi','missouri','montana','nebraska','nevada','new hampshire','new jersey','new mexico','new york','north carolina','north dakota','ohio','oklahoma','oregon','pennsylvania','rhode island','south carolina','south dakota','tennessee','texas','utah','vermont','virginia','washington','west virginia','wisconsin','wyoming','washington dc','washington d.c.','new york city','los angeles','chicago','houston','austin','seattle','boston','denver','atlanta','dallas','miami','phoenix','san francisco','san jose','san diego','philadelphia','nashville','portland','charlotte','raleigh','salt lake','pittsburgh','indianapolis','kansas city','columbus','orlando','tampa','sacramento','las vegas',', al',', ak',', az',', ar',', ca',', co',', ct',', de',', fl',', ga',', hi',', id',', il',', in',', ia',', ks',', ky',', la',', me',', md',', ma',', mi',', mn',', ms',', mo',', mt',', ne',', nv',', nh',', nj',', nm',', ny',', nc',', nd',', oh',', ok',', or',', pa',', ri',', sc',', sd',', tn',', tx',', ut',', vt',', va',', wa',', wv',', wi',', wy',', dc','united states','remote, us','remote, usa','remote (us','(us)','us only','u.s.'];
+  if (US_SIGNALS.some(s => l.includes(s))) return true;
+  // Default: allow if no foreign signal found (most ATS companies are US-based)
   return true;
 }
 
