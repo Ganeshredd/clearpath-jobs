@@ -433,13 +433,12 @@ async function runJobBoards() {
   const seen = new Set();
   const deduped = all.filter(j => { if (seen.has(j.id)) return false; seen.add(j.id); return true; });
 
-  // Filter: cyber only, no clearance, US only
+  // Filter: no clearance, US only, Jan 2026+
   const JAN_2026 = new Date('2026-01-01T00:00:00.000Z').getTime();
   const filtered = deduped.filter(j => {
     if (!isUSJob(j.location)) return false;
     const combined = (j.title+' '+j.desc).toLowerCase();
     if (isClearanceJob(combined)) return false;
-    if (!isCyberJob(j.title, j.desc)) return false;
     if (j.postedAt && new Date(j.postedAt).getTime() < JAN_2026) return false;
     return true;
   });
