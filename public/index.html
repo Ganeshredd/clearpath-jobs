@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ClearPath OS — Cybersecurity Career Operating System</title>
+<title>ClearPath OS — Career Operating System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -514,7 +514,7 @@ body {
       <div class="sb-avatar" id="sb-initials">?</div>
       <div>
         <div class="sb-user-name" id="sb-name">Guest User</div>
-        <div class="sb-user-role">Cyber Professional</div>
+        <div class="sb-user-role">Professional</div>
       </div>
     </div>
   </div>
@@ -528,7 +528,7 @@ body {
     <div class="topbar">
       <div>
         <div class="page-title">Welcome back, <span id="dash-name">—</span> 👋</div>
-        <div class="page-sub">Your cybersecurity career command center</div>
+        <div class="page-sub">Your career command center</div>
       </div>
       <div class="topbar-actions">
         <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)">
@@ -1072,7 +1072,7 @@ function nav(page) {
 // ── LOAD JOBS ──────────────────────────────────────────────────────────────
 async function loadJobs() {
   try {
-    const r = await fetch(`${API}/api/jobs?limit=1000`);
+    const r = await fetch(`${API}/api/jobs?limit=5000`);
     const d = await r.json();
 
     allJobs = (d.jobs || []).filter(j => j && j.title).map(j => ({
